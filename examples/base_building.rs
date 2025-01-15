@@ -1,164 +1,110 @@
-use std::collections::HashMap;
-
 use goap::prelude::*;
 
 fn main() {
     // Initial state - empty plot with basic resources
-    let mut initial_state = WorldState::new();
-    initial_state.set("metal", StateVar::I64(0)); // Basic building material
-    initial_state.set("energy", StateVar::I64(0)); // Power resource
-    initial_state.set("components", StateVar::I64(0)); // Crafted from metal
-    initial_state.set("battery_charge", StateVar::I64(0)); // Stored energy
-    initial_state.set("defense_rating", StateVar::I64(0)); // Base defense level
-    initial_state.set("has_mine", StateVar::Bool(false));
-    initial_state.set("has_factory", StateVar::Bool(false));
-    initial_state.set("has_solar", StateVar::Bool(false));
-    initial_state.set("has_battery", StateVar::Bool(false));
-    initial_state.set("has_walls", StateVar::Bool(false));
-    initial_state.set("has_turrets", StateVar::Bool(false));
+    let initial_state = WorldState::builder()
+        .int("metal", 0) // Basic building material
+        .int("energy", 0) // Power resource
+        .int("components", 0) // Crafted from metal
+        .int("battery_charge", 0) // Stored energy
+        .int("defense_rating", 0) // Base defense level
+        .bool("has_mine", false)
+        .bool("has_factory", false)
+        .bool("has_solar", false)
+        .bool("has_battery", false)
+        .bool("has_walls", false)
+        .bool("has_turrets", false)
+        .build();
 
     // Goal state - functional base with power and defenses
-    let mut goal_state = WorldState::new();
-    goal_state.set("energy", StateVar::I64(50)); // Sustainable power generation
-    goal_state.set("battery_charge", StateVar::I64(100)); // Energy storage
-    goal_state.set("defense_rating", StateVar::I64(75)); // Adequate defense
-    goal_state.set("has_walls", StateVar::Bool(true)); // Basic defense
-    goal_state.set("has_turrets", StateVar::Bool(true)); // Active defense
-
-    let goal = Goal::new("build_defensive_base", goal_state);
+    let goal = Goal::builder("build_defensive_base")
+        .require_int("energy", 50) // Sustainable power generation
+        .require_int("battery_charge", 100) // Energy storage
+        .require_int("defense_rating", 75) // Adequate defense
+        .require_bool("has_walls", true) // Basic defense
+        .require_bool("has_turrets", true) // Active defense
+        .build();
 
     // Create planner
     let mut planner = Planner::new();
 
     // Action: Build Mining Facility
-    let mut build_mine_effects = HashMap::new();
-    build_mine_effects.insert(
-        "has_mine".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    build_mine_effects.insert("metal".to_string(), StateOperation::Add(20)); // Initial metal bonus
-    let build_mine = Action::new("build_mine", 3.0, WorldState::new(), build_mine_effects);
+    let build_mine = Action::builder("build_mine")
+        .cost(3.0)
+        .effect_set_to("has_mine", true)
+        .effect_add_int("metal", 20) // Initial metal bonus
+        .build();
 
     // Action: Mine Resources
-    let mut mine_effects = HashMap::new();
-    mine_effects.insert("metal".to_string(), StateOperation::Add(15));
-    let mut mine_conditions = WorldState::new();
-    mine_conditions.set("has_mine", StateVar::Bool(true));
-    let mine_resources = Action::new("mine_resources", 2.0, mine_conditions, mine_effects);
+    let mine_resources = Action::builder("mine_resources")
+        .cost(2.0)
+        .precondition("has_mine", true)
+        .effect_add_int("metal", 15)
+        .build();
 
     // Action: Build Factory
-    let mut build_factory_effects = HashMap::new();
-    build_factory_effects.insert(
-        "has_factory".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    build_factory_effects.insert("metal".to_string(), StateOperation::Subtract(20));
-    let mut build_factory_conditions = WorldState::new();
-    build_factory_conditions.set("metal", StateVar::I64(20));
-    let build_factory = Action::new(
-        "build_factory",
-        4.0,
-        build_factory_conditions,
-        build_factory_effects,
-    );
+    let build_factory = Action::builder("build_factory")
+        .cost(4.0)
+        .precondition("metal", 20)
+        .effect_set_to("has_factory", true)
+        .effect_subtract_int("metal", 20)
+        .build();
 
     // Action: Craft Components
-    let mut craft_components_effects = HashMap::new();
-    craft_components_effects.insert("components".to_string(), StateOperation::Add(10));
-    craft_components_effects.insert("metal".to_string(), StateOperation::Subtract(5));
-    let mut craft_components_conditions = WorldState::new();
-    craft_components_conditions.set("has_factory", StateVar::Bool(true));
-    craft_components_conditions.set("metal", StateVar::I64(5));
-    let craft_components = Action::new(
-        "craft_components",
-        2.0,
-        craft_components_conditions,
-        craft_components_effects,
-    );
+    let craft_components = Action::builder("craft_components")
+        .cost(2.0)
+        .precondition("has_factory", true)
+        .precondition("metal", 5)
+        .effect_add_int("components", 10)
+        .effect_subtract_int("metal", 5)
+        .build();
 
     // Action: Build Solar Panels
-    let mut build_solar_effects = HashMap::new();
-    build_solar_effects.insert(
-        "has_solar".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    build_solar_effects.insert("energy".to_string(), StateOperation::Add(30));
-    build_solar_effects.insert("components".to_string(), StateOperation::Subtract(5));
-    let mut build_solar_conditions = WorldState::new();
-    build_solar_conditions.set("components", StateVar::I64(5));
-    let build_solar = Action::new(
-        "build_solar_panels",
-        3.0,
-        build_solar_conditions,
-        build_solar_effects,
-    );
+    let build_solar = Action::builder("build_solar_panels")
+        .cost(3.0)
+        .precondition("components", 5)
+        .effect_set_to("has_solar", true)
+        .effect_add_int("energy", 30)
+        .effect_subtract_int("components", 5)
+        .build();
 
     // Action: Build Battery
-    let mut build_battery_effects = HashMap::new();
-    build_battery_effects.insert(
-        "has_battery".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    build_battery_effects.insert("components".to_string(), StateOperation::Subtract(8));
-    let mut build_battery_conditions = WorldState::new();
-    build_battery_conditions.set("components", StateVar::I64(8));
-    let build_battery = Action::new(
-        "build_battery",
-        3.0,
-        build_battery_conditions,
-        build_battery_effects,
-    );
+    let build_battery = Action::builder("build_battery")
+        .cost(3.0)
+        .precondition("components", 8)
+        .effect_set_to("has_battery", true)
+        .effect_subtract_int("components", 8)
+        .build();
 
     // Action: Charge Battery
-    let mut charge_battery_effects = HashMap::new();
-    charge_battery_effects.insert("battery_charge".to_string(), StateOperation::Add(50));
-    charge_battery_effects.insert("energy".to_string(), StateOperation::Subtract(25));
-    let mut charge_battery_conditions = WorldState::new();
-    charge_battery_conditions.set("has_battery", StateVar::Bool(true));
-    charge_battery_conditions.set("has_solar", StateVar::Bool(true));
-    charge_battery_conditions.set("energy", StateVar::I64(25));
-    let charge_battery = Action::new(
-        "charge_battery",
-        2.0,
-        charge_battery_conditions,
-        charge_battery_effects,
-    );
+    let charge_battery = Action::builder("charge_battery")
+        .cost(2.0)
+        .precondition("has_battery", true)
+        .precondition("has_solar", true)
+        .precondition("energy", 25)
+        .effect_add_int("battery_charge", 50)
+        .effect_subtract_int("energy", 25)
+        .build();
 
     // Action: Build Walls
-    let mut build_walls_effects = HashMap::new();
-    build_walls_effects.insert(
-        "has_walls".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    build_walls_effects.insert("defense_rating".to_string(), StateOperation::Add(30));
-    build_walls_effects.insert("metal".to_string(), StateOperation::Subtract(15));
-    let mut build_walls_conditions = WorldState::new();
-    build_walls_conditions.set("metal", StateVar::I64(15));
-    let build_walls = Action::new(
-        "build_walls",
-        4.0,
-        build_walls_conditions,
-        build_walls_effects,
-    );
+    let build_walls = Action::builder("build_walls")
+        .cost(4.0)
+        .precondition("metal", 15)
+        .effect_set_to("has_walls", true)
+        .effect_add_int("defense_rating", 30)
+        .effect_subtract_int("metal", 15)
+        .build();
 
     // Action: Build Turrets
-    let mut build_turrets_effects = HashMap::new();
-    build_turrets_effects.insert(
-        "has_turrets".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    build_turrets_effects.insert("defense_rating".to_string(), StateOperation::Add(45));
-    build_turrets_effects.insert("components".to_string(), StateOperation::Subtract(10));
-    let mut build_turrets_conditions = WorldState::new();
-    build_turrets_conditions.set("components", StateVar::I64(10));
-    build_turrets_conditions.set("has_walls", StateVar::Bool(true));
-    build_turrets_conditions.set("energy", StateVar::I64(20));
-    let build_turrets = Action::new(
-        "build_turrets",
-        5.0,
-        build_turrets_conditions,
-        build_turrets_effects,
-    );
+    let build_turrets = Action::builder("build_turrets")
+        .cost(5.0)
+        .precondition("components", 10)
+        .precondition("has_walls", true)
+        .precondition("energy", 20)
+        .effect_set_to("has_turrets", true)
+        .effect_add_int("defense_rating", 45)
+        .effect_subtract_int("components", 10)
+        .build();
 
     // Add all actions to planner
     planner.add_action(build_mine);
@@ -240,7 +186,7 @@ fn main() {
 
     println!("\nSimulating plan execution:");
     for action in &actions {
-        current_state = action.execute(&current_state);
+        current_state = action.apply_effect(&current_state);
         println!("After {}: ", action.name);
         if let Some(StateVar::I64(metal)) = current_state.get("metal") {
             println!("  Metal: {}", metal);

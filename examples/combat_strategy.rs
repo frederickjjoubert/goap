@@ -1,106 +1,77 @@
-use std::collections::HashMap;
-
 use goap::prelude::*;
 
 fn main() {
     // Initial state - player is not ready for combat
-    let mut initial_state = WorldState::new();
-    initial_state.set("health", StateVar::I64(30)); // Low health (30/100)
-    initial_state.set("armor", StateVar::I64(0)); // No armor
-    initial_state.set("ammo", StateVar::I64(5)); // Low ammo
-    initial_state.set("at_medical", StateVar::Bool(false));
-    initial_state.set("at_armory", StateVar::Bool(false));
-    initial_state.set("at_trading", StateVar::Bool(false));
-    initial_state.set("has_credits", StateVar::I64(100)); // Starting credits
+    let initial_state = WorldState::builder()
+        .int("health", 30) // Low health (30/100)
+        .int("armor", 0) // No armor
+        .int("ammo", 5) // Low ammo
+        .bool("at_medical", false)
+        .bool("at_armory", false)
+        .bool("at_trading", false)
+        .int("has_credits", 100) // Starting credits
+        .build();
 
     // Goal state - ready for boss battle
-    let mut goal_state = WorldState::new();
-    goal_state.set("health", StateVar::I64(100)); // Full health
-    goal_state.set("armor", StateVar::I64(50)); // Decent armor
-    goal_state.set("ammo", StateVar::I64(50)); // Sufficient ammo
-
-    let goal = Goal::new("prepare_for_boss", goal_state);
+    let goal = Goal::builder("prepare_for_boss")
+        .require_int("health", 100) // Full health
+        .require_int("armor", 50) // Decent armor
+        .require_int("ammo", 50) // Sufficient ammo
+        .build();
 
     // Create actions
     let mut planner = Planner::new();
 
     // Action: Move to medical bay
-    let mut goto_medical_effects = HashMap::new();
-    goto_medical_effects.insert(
-        "at_medical".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_medical_effects.insert(
-        "at_armory".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_medical_effects.insert(
-        "at_trading".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_medical = Action::new("goto_medical", 1.0, WorldState::new(), goto_medical_effects);
+    let goto_medical = Action::builder("goto_medical")
+        .cost(1.0)
+        .effect_set_to("at_medical", true)
+        .effect_set_to("at_armory", false)
+        .effect_set_to("at_trading", false)
+        .build();
 
     // Action: Move to armory
-    let mut goto_armory_effects = HashMap::new();
-    goto_armory_effects.insert(
-        "at_armory".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_armory_effects.insert(
-        "at_medical".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_armory_effects.insert(
-        "at_trading".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_armory = Action::new("goto_armory", 1.0, WorldState::new(), goto_armory_effects);
+    let goto_armory = Action::builder("goto_armory")
+        .cost(1.0)
+        .effect_set_to("at_armory", true)
+        .effect_set_to("at_medical", false)
+        .effect_set_to("at_trading", false)
+        .build();
 
     // Action: Move to trading post
-    let mut goto_trading_effects = HashMap::new();
-    goto_trading_effects.insert(
-        "at_trading".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_trading_effects.insert(
-        "at_medical".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_trading_effects.insert(
-        "at_armory".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_trading = Action::new("goto_trading", 1.0, WorldState::new(), goto_trading_effects);
+    let goto_trading = Action::builder("goto_trading")
+        .cost(1.0)
+        .effect_set_to("at_trading", true)
+        .effect_set_to("at_medical", false)
+        .effect_set_to("at_armory", false)
+        .build();
 
     // Action: Use health station
-    let mut heal_effects = HashMap::new();
-    heal_effects.insert(
-        "health".to_string(),
-        StateOperation::Set(StateVar::I64(100)),
-    );
-    heal_effects.insert("has_credits".to_string(), StateOperation::Subtract(20));
-    let mut heal_conditions = WorldState::new();
-    heal_conditions.set("at_medical", StateVar::Bool(true));
-    heal_conditions.set("has_credits", StateVar::I64(20));
-    let heal = Action::new("use_health_station", 2.0, heal_conditions, heal_effects);
+    let heal = Action::builder("use_health_station")
+        .cost(2.0)
+        .precondition("at_medical", true)
+        .precondition("has_credits", 20)
+        .effect_set_to("health", 100)
+        .effect_subtract_int("has_credits", 20)
+        .build();
 
     // Action: Buy armor
-    let mut buy_armor_effects = HashMap::new();
-    buy_armor_effects.insert("armor".to_string(), StateOperation::Set(StateVar::I64(50)));
-    buy_armor_effects.insert("has_credits".to_string(), StateOperation::Subtract(30));
-    let mut buy_armor_conditions = WorldState::new();
-    buy_armor_conditions.set("at_armory", StateVar::Bool(true));
-    buy_armor_conditions.set("has_credits", StateVar::I64(30));
-    let buy_armor = Action::new("buy_armor", 2.0, buy_armor_conditions, buy_armor_effects);
+    let buy_armor = Action::builder("buy_armor")
+        .cost(2.0)
+        .precondition("at_armory", true)
+        .precondition("has_credits", 30)
+        .effect_set_to("armor", 50)
+        .effect_subtract_int("has_credits", 30)
+        .build();
 
     // Action: Buy ammo
-    let mut buy_ammo_effects = HashMap::new();
-    buy_ammo_effects.insert("ammo".to_string(), StateOperation::Set(StateVar::I64(50)));
-    buy_ammo_effects.insert("has_credits".to_string(), StateOperation::Subtract(25));
-    let mut buy_ammo_conditions = WorldState::new();
-    buy_ammo_conditions.set("at_trading", StateVar::Bool(true));
-    buy_ammo_conditions.set("has_credits", StateVar::I64(25));
-    let buy_ammo = Action::new("buy_ammo", 1.5, buy_ammo_conditions, buy_ammo_effects);
+    let buy_ammo = Action::builder("buy_ammo")
+        .cost(1.5)
+        .precondition("at_trading", true)
+        .precondition("has_credits", 25)
+        .effect_set_to("ammo", 50)
+        .effect_subtract_int("has_credits", 25)
+        .build();
 
     // Add all actions to planner
     planner.add_action(goto_medical);
@@ -179,7 +150,7 @@ fn main() {
 
     for action in &actions {
         // Apply action effects
-        current_state = action.execute(&current_state);
+        current_state = action.apply_effect(&current_state);
 
         // Track credits spent
         if let Some(StateVar::I64(credits)) = current_state.get("has_credits") {

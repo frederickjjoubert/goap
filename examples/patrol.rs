@@ -1,177 +1,99 @@
-use std::collections::HashMap;
-
 use goap::prelude::*;
 
 fn main() {
     // Initial state - guard starts at base without radio
-    let mut initial_state = WorldState::new();
-    initial_state.set("at_base", StateVar::Bool(true));
-    initial_state.set("at_point_a", StateVar::Bool(false));
-    initial_state.set("at_point_b", StateVar::Bool(false));
-    initial_state.set("at_point_c", StateVar::Bool(false));
-    initial_state.set("has_radio", StateVar::Bool(false));
-    initial_state.set("reported_at_a", StateVar::Bool(false));
-    initial_state.set("reported_at_b", StateVar::Bool(false));
-    initial_state.set("reported_at_c", StateVar::Bool(false));
+    let initial_state = WorldState::builder()
+        .bool("at_base", true)
+        .bool("at_point_a", false)
+        .bool("at_point_b", false)
+        .bool("at_point_c", false)
+        .bool("has_radio", false)
+        .bool("reported_at_a", false)
+        .bool("reported_at_b", false)
+        .bool("reported_at_c", false)
+        .build();
 
     // Goal state - complete patrol route and return to base
-    let mut goal_state = WorldState::new();
-    goal_state.set("has_radio", StateVar::Bool(true));
-    goal_state.set("reported_at_a", StateVar::Bool(true));
-    goal_state.set("reported_at_b", StateVar::Bool(true));
-    goal_state.set("reported_at_c", StateVar::Bool(true));
-    goal_state.set("at_base", StateVar::Bool(true));
-
-    let goal = Goal::new("complete_patrol", goal_state);
+    let goal = Goal::builder("complete_patrol")
+        .require_bool("has_radio", true)
+        .require_bool("reported_at_a", true)
+        .require_bool("reported_at_b", true)
+        .require_bool("reported_at_c", true)
+        .require_bool("at_base", true)
+        .build();
 
     // Create planner
     let mut planner = Planner::new();
 
     // Action: Equip Radio at Base
-    let mut equip_radio_effects = HashMap::new();
-    equip_radio_effects.insert(
-        "has_radio".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let mut equip_radio_conditions = WorldState::new();
-    equip_radio_conditions.set("at_base", StateVar::Bool(true));
-    equip_radio_conditions.set("has_radio", StateVar::Bool(false));
-    let equip_radio = Action::new(
-        "equip_radio",
-        1.0,
-        equip_radio_conditions,
-        equip_radio_effects,
-    );
+    let equip_radio = Action::builder("equip_radio")
+        .cost(1.0)
+        .precondition("at_base", true)
+        .precondition("has_radio", false)
+        .effect_set_to("has_radio", true)
+        .build();
 
     // Action: Move to Point A
-    let mut goto_a_effects = HashMap::new();
-    goto_a_effects.insert(
-        "at_point_a".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_a_effects.insert(
-        "at_base".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_a_effects.insert(
-        "at_point_b".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_a_effects.insert(
-        "at_point_c".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_point_a = Action::new("move_to_point_a", 5.0, WorldState::new(), goto_a_effects);
+    let goto_point_a = Action::builder("move_to_point_a")
+        .cost(5.0)
+        .effect_set_to("at_point_a", true)
+        .effect_set_to("at_base", false)
+        .effect_set_to("at_point_b", false)
+        .effect_set_to("at_point_c", false)
+        .build();
 
     // Action: Move to Point B
-    let mut goto_b_effects = HashMap::new();
-    goto_b_effects.insert(
-        "at_point_b".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_b_effects.insert(
-        "at_base".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_b_effects.insert(
-        "at_point_a".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_b_effects.insert(
-        "at_point_c".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_point_b = Action::new("move_to_point_b", 5.0, WorldState::new(), goto_b_effects);
+    let goto_point_b = Action::builder("move_to_point_b")
+        .cost(5.0)
+        .effect_set_to("at_point_b", true)
+        .effect_set_to("at_base", false)
+        .effect_set_to("at_point_a", false)
+        .effect_set_to("at_point_c", false)
+        .build();
 
     // Action: Move to Point C
-    let mut goto_c_effects = HashMap::new();
-    goto_c_effects.insert(
-        "at_point_c".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_c_effects.insert(
-        "at_base".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_c_effects.insert(
-        "at_point_a".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_c_effects.insert(
-        "at_point_b".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_point_c = Action::new("move_to_point_c", 5.0, WorldState::new(), goto_c_effects);
+    let goto_point_c = Action::builder("move_to_point_c")
+        .cost(5.0)
+        .effect_set_to("at_point_c", true)
+        .effect_set_to("at_base", false)
+        .effect_set_to("at_point_a", false)
+        .effect_set_to("at_point_b", false)
+        .build();
 
     // Action: Return to Base
-    let mut goto_base_effects = HashMap::new();
-    goto_base_effects.insert(
-        "at_base".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    goto_base_effects.insert(
-        "at_point_a".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_base_effects.insert(
-        "at_point_b".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_base_effects.insert(
-        "at_point_c".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let goto_base = Action::new("return_to_base", 5.0, WorldState::new(), goto_base_effects);
+    let goto_base = Action::builder("return_to_base")
+        .cost(5.0)
+        .effect_set_to("at_base", true)
+        .effect_set_to("at_point_a", false)
+        .effect_set_to("at_point_b", false)
+        .effect_set_to("at_point_c", false)
+        .build();
 
     // Action: Report at Point A
-    let mut report_a_effects = HashMap::new();
-    report_a_effects.insert(
-        "reported_at_a".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let mut report_a_conditions = WorldState::new();
-    report_a_conditions.set("has_radio", StateVar::Bool(true));
-    report_a_conditions.set("at_point_a", StateVar::Bool(true));
-    let report_at_a = Action::new(
-        "report_at_point_a",
-        2.0,
-        report_a_conditions,
-        report_a_effects,
-    );
+    let report_at_a = Action::builder("report_at_point_a")
+        .cost(2.0)
+        .precondition("has_radio", true)
+        .precondition("at_point_a", true)
+        .effect_set_to("reported_at_a", true)
+        .build();
 
     // Action: Report at Point B
-    let mut report_b_effects = HashMap::new();
-    report_b_effects.insert(
-        "reported_at_b".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let mut report_b_conditions = WorldState::new();
-    report_b_conditions.set("has_radio", StateVar::Bool(true));
-    report_b_conditions.set("at_point_b", StateVar::Bool(true));
-    report_b_conditions.set("reported_at_a", StateVar::Bool(true)); // Must report at A first
-    let report_at_b = Action::new(
-        "report_at_point_b",
-        2.0,
-        report_b_conditions,
-        report_b_effects,
-    );
+    let report_at_b = Action::builder("report_at_point_b")
+        .cost(2.0)
+        .precondition("has_radio", true)
+        .precondition("at_point_b", true)
+        .precondition("reported_at_a", true) // Must report at A first
+        .effect_set_to("reported_at_b", true)
+        .build();
 
     // Action: Report at Point C
-    let mut report_c_effects = HashMap::new();
-    report_c_effects.insert(
-        "reported_at_c".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let mut report_c_conditions = WorldState::new();
-    report_c_conditions.set("has_radio", StateVar::Bool(true));
-    report_c_conditions.set("at_point_c", StateVar::Bool(true));
-    report_c_conditions.set("reported_at_b", StateVar::Bool(true)); // Must report at B first
-    let report_at_c = Action::new(
-        "report_at_point_c",
-        2.0,
-        report_c_conditions,
-        report_c_effects,
-    );
+    let report_at_c = Action::builder("report_at_point_c")
+        .cost(2.0)
+        .precondition("has_radio", true)
+        .precondition("at_point_c", true)
+        .precondition("reported_at_b", true) // Must report at B first
+        .effect_set_to("reported_at_c", true)
+        .build();
 
     // Add all actions to planner
     planner.add_action(equip_radio);
@@ -244,7 +166,7 @@ fn main() {
 
     println!("\nSimulating plan execution:");
     for action in &actions {
-        current_state = action.execute(&current_state);
+        current_state = action.apply_effect(&current_state);
         println!("After {}: ", action.name);
         if let Some(StateVar::Bool(at_base)) = current_state.get("at_base") {
             println!("  At Base: {}", at_base);

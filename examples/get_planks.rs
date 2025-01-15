@@ -1,70 +1,53 @@
-use std::collections::HashMap;
-
 use goap::prelude::*;
 
 fn main() {
     // Create initial state
-    let mut initial_state = WorldState::new();
-    initial_state.set("has_wood", StateVar::Bool(false));
-    initial_state.set("has_axe", StateVar::Bool(false));
-    initial_state.set("has_money", StateVar::Bool(true));
-    initial_state.set("at_store", StateVar::Bool(false));
-    initial_state.set("at_tree", StateVar::Bool(false));
+    let initial_state = WorldState::builder()
+        .bool("has_wood", false)
+        .bool("has_axe", false)
+        .bool("has_money", true)
+        .bool("at_store", false)
+        .bool("at_tree", false)
+        .build();
 
     // Create goal state
-    let mut goal_state = WorldState::new();
-    goal_state.set("has_wood", StateVar::Bool(true));
-    let goal = Goal::new("gather_wood", goal_state);
+    let goal = Goal::builder("gather_wood")
+        .require_bool("has_wood", true)
+        .build();
 
     // Create actions
-    let mut goto_store_effects = HashMap::new();
-    goto_store_effects.insert(
-        "at_store".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let goto_store_action = Action::new("goto_store", 1.0, WorldState::new(), goto_store_effects);
+    let goto_store = Action::builder("goto_store")
+        .cost(1.0)
+        .effect_set_to("at_store", true)
+        .build();
 
-    let mut buy_axe_effects = HashMap::new();
-    buy_axe_effects.insert(
-        "has_axe".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    buy_axe_effects.insert(
-        "has_money".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    let mut buy_conditions = WorldState::new();
-    buy_conditions.set("at_store", StateVar::Bool(true));
-    buy_conditions.set("has_money", StateVar::Bool(true));
-    let buy_axe_action = Action::new("buy_axe", 1.0, buy_conditions, buy_axe_effects);
+    let buy_axe = Action::builder("buy_axe")
+        .cost(1.0)
+        .precondition("at_store", true)
+        .precondition("has_money", true)
+        .effect_set_to("has_axe", true)
+        .effect_set_to("has_money", false)
+        .build();
 
-    let mut goto_tree_effects = HashMap::new();
-    goto_tree_effects.insert(
-        "at_store".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    goto_tree_effects.insert(
-        "at_tree".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let goto_tree_action = Action::new("goto_tree", 1.0, WorldState::new(), goto_tree_effects);
+    let goto_tree = Action::builder("goto_tree")
+        .cost(1.0)
+        .effect_set_to("at_store", false)
+        .effect_set_to("at_tree", true)
+        .build();
 
-    let mut chop_tree_effects = HashMap::new();
-    chop_tree_effects.insert(
-        "has_wood".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let mut chop_conditions = WorldState::new();
-    chop_conditions.set("has_axe", StateVar::Bool(true));
-    chop_conditions.set("at_tree", StateVar::Bool(true));
-    let chop_action = Action::new("chop_tree", 2.0, chop_conditions, chop_tree_effects);
+    let chop_tree = Action::builder("chop_tree")
+        .cost(2.0)
+        .precondition("has_axe", true)
+        .precondition("at_tree", true)
+        .effect_set_to("has_wood", true)
+        .build();
 
     // Create planner and add actions
     let mut planner = Planner::new();
-    planner.add_action(goto_store_action);
-    planner.add_action(buy_axe_action);
-    planner.add_action(goto_tree_action);
-    planner.add_action(chop_action);
+    planner.add_action(goto_store);
+    planner.add_action(buy_axe);
+    planner.add_action(goto_tree);
+    planner.add_action(chop_tree);
 
     // Find plan
     let plan_result = planner.plan(initial_state.clone(), &goal);

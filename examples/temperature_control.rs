@@ -1,87 +1,56 @@
 use goap::prelude::*;
-use std::collections::HashMap;
 
 fn main() {
     let mut planner = Planner::new();
 
     // Initial state: Room is 22.5°C, heater and cooler are off
-    let mut initial_state = WorldState::new();
-    initial_state.set("temperature", StateVar::from_f64(22.5));
-    initial_state.set("heater_on", StateVar::Bool(false));
-    initial_state.set("cooler_on", StateVar::Bool(false));
-    initial_state.set("power_available", StateVar::from_f64(100.0)); // 100% power available
+    let initial_state = WorldState::builder()
+        .float("temperature", 22.5)
+        .bool("heater_on", false)
+        .bool("cooler_on", false)
+        .float("power_available", 100.0) // 100% power available
+        .build();
 
     // Goal: Get room to 24.0°C
-    let mut goal_state = WorldState::new();
-    goal_state.set("temperature", StateVar::from_f64(24.0));
+    let goal = Goal::builder("Adjust Temperature")
+        .require_float("temperature", 24.0)
+        .build();
 
     // Action: Turn on heater
-    let mut turn_on_heater_conditions = WorldState::new();
-    turn_on_heater_conditions.set("heater_on", StateVar::Bool(false));
-    turn_on_heater_conditions.set("power_available", StateVar::from_f64(20.0)); // Need at least 20% power
-
-    let mut turn_on_heater_effects = HashMap::new();
-    turn_on_heater_effects.insert(
-        "heater_on".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    turn_on_heater_effects.insert(
-        "power_available".to_string(),
-        StateOperation::subtract_f64(20.0),
-    );
-
-    let turn_on_heater = Action::new(
-        "Turn on heater",
-        1.0,
-        turn_on_heater_conditions,
-        turn_on_heater_effects,
-    );
+    let turn_on_heater = Action::builder("Turn on heater")
+        .cost(1.0)
+        .precondition("heater_on", false)
+        .precondition("power_available", 20.0) // Need at least 20% power
+        .effect_set_to("heater_on", true)
+        .effect_subtract_float("power_available", 20.0)
+        .build();
 
     // Action: Heat room (can be applied multiple times)
-    let mut heat_room_conditions = WorldState::new();
-    heat_room_conditions.set("heater_on", StateVar::Bool(true));
-
-    let mut heat_room_effects = HashMap::new();
-    heat_room_effects.insert(
-        "temperature".to_string(),
-        StateOperation::add_f64(0.5), // Increases temperature by 0.5°C
-    );
-
-    let heat_room = Action::new("Heat room", 2.0, heat_room_conditions, heat_room_effects);
+    let heat_room = Action::builder("Heat room")
+        .cost(2.0)
+        .precondition("heater_on", true)
+        .precondition("power_available", 5.0) // Need at least 5% power to heat
+        .effect_add_float("temperature", 0.5) // Increases temperature by 0.5°C
+        .effect_subtract_float("power_available", 5.0) // Consumes 5% power per heating cycle
+        .build();
 
     // Action: Turn on cooler
-    let mut turn_on_cooler_conditions = WorldState::new();
-    turn_on_cooler_conditions.set("cooler_on", StateVar::Bool(false));
-    turn_on_cooler_conditions.set("power_available", StateVar::from_f64(30.0)); // Need at least 30% power
-
-    let mut turn_on_cooler_effects = HashMap::new();
-    turn_on_cooler_effects.insert(
-        "cooler_on".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    turn_on_cooler_effects.insert(
-        "power_available".to_string(),
-        StateOperation::subtract_f64(30.0),
-    );
-
-    let turn_on_cooler = Action::new(
-        "Turn on cooler",
-        1.0,
-        turn_on_cooler_conditions,
-        turn_on_cooler_effects,
-    );
+    let turn_on_cooler = Action::builder("Turn on cooler")
+        .cost(1.0)
+        .precondition("cooler_on", false)
+        .precondition("power_available", 30.0) // Need at least 30% power
+        .effect_set_to("cooler_on", true)
+        .effect_subtract_float("power_available", 30.0)
+        .build();
 
     // Action: Cool room (can be applied multiple times)
-    let mut cool_room_conditions = WorldState::new();
-    cool_room_conditions.set("cooler_on", StateVar::Bool(true));
-
-    let mut cool_room_effects = HashMap::new();
-    cool_room_effects.insert(
-        "temperature".to_string(),
-        StateOperation::subtract_f64(1.0), // Decreases temperature by 1.0°C
-    );
-
-    let cool_room = Action::new("Cool room", 2.0, cool_room_conditions, cool_room_effects);
+    let cool_room = Action::builder("Cool room")
+        .cost(2.0)
+        .precondition("cooler_on", true)
+        .precondition("power_available", 8.0) // Need at least 8% power to cool
+        .effect_subtract_float("temperature", 1.0) // Decreases temperature by 1.0°C
+        .effect_subtract_float("power_available", 8.0) // Consumes 8% power per cooling cycle
+        .build();
 
     // Add actions to planner
     planner.add_action(turn_on_heater);
@@ -92,12 +61,9 @@ fn main() {
     // Find plan
     println!("Planning to adjust room temperature...");
     println!("Initial state: {:?}", initial_state);
-    println!("Goal state: {:?}", goal_state);
+    println!("Goal state: {:?}", goal);
 
-    match planner.plan(
-        initial_state.clone(),
-        &Goal::new("Adjust Temperature", goal_state),
-    ) {
+    match planner.plan(initial_state.clone(), &goal) {
         Some((actions, cost)) => {
             println!(
                 "\nFound plan with {} actions and cost {:.2}:",
@@ -108,7 +74,7 @@ fn main() {
 
             for (i, action) in actions.iter().enumerate() {
                 println!("\nStep {}: {}", i + 1, action.name);
-                current_state.apply(&action.effects);
+                current_state = action.apply_effect(&current_state);
 
                 if let Some(temp) = current_state.get("temperature").and_then(|v| v.as_f64()) {
                     println!("Temperature: {:.1}°C", temp);

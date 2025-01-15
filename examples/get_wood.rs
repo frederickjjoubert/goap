@@ -1,46 +1,35 @@
-use std::collections::HashMap;
-
 use goap::prelude::*;
 
 fn main() {
     // Create initial state
-    let mut initial_state = WorldState::new();
-    initial_state.set("has_wood", StateVar::Bool(false));
-    initial_state.set("has_axe", StateVar::Bool(true));
-    initial_state.set("at_tree", StateVar::Bool(false));
+    let initial_state = WorldState::builder()
+        .bool("has_wood", false)
+        .bool("has_axe", true)
+        .bool("at_tree", false)
+        .build();
 
     // Create goal state
-    let mut goal_state = WorldState::new();
-    goal_state.set("has_wood", StateVar::Bool(true));
-    let goal = Goal::new("gather_wood", goal_state);
+    let goal = Goal::builder("gather_wood")
+        .require_bool("has_wood", true)
+        .build();
 
     // Create actions
-    let mut move_to_tree_effects = HashMap::new();
-    move_to_tree_effects.insert(
-        "at_tree".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let move_action = Action::new(
-        "move_to_tree",
-        1.0,
-        WorldState::new(), // No preconditions
-        move_to_tree_effects,
-    );
+    let move_to_tree = Action::builder("move_to_tree")
+        .cost(1.0)
+        .effect_set_to("at_tree", true)
+        .build();
 
-    let mut chop_tree_effects = HashMap::new();
-    chop_tree_effects.insert(
-        "has_wood".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    let mut chop_conditions = WorldState::new();
-    chop_conditions.set("has_axe", StateVar::Bool(true));
-    chop_conditions.set("at_tree", StateVar::Bool(true));
-    let chop_action = Action::new("chop_tree", 2.0, chop_conditions, chop_tree_effects);
+    let chop_tree = Action::builder("chop_tree")
+        .cost(2.0)
+        .precondition("has_axe", true)
+        .precondition("at_tree", true)
+        .effect_set_to("has_wood", true)
+        .build();
 
     // Create planner and add actions
     let mut planner = Planner::new();
-    planner.add_action(move_action);
-    planner.add_action(chop_action);
+    planner.add_action(move_to_tree);
+    planner.add_action(chop_tree);
 
     // Find plan
     let plan_result = planner.plan(initial_state.clone(), &goal);

@@ -1,22 +1,21 @@
 use goap::prelude::*;
-use std::collections::HashMap;
 
 fn main() {
     // Initial state - robot starts at position (0,0)
-    let mut initial_state = WorldState::new();
-    initial_state.set("x", StateVar::I64(0));
-    initial_state.set("y", StateVar::I64(0));
-    initial_state.set("battery", StateVar::I64(300));
-    initial_state.set("has_package", StateVar::Bool(false));
-    initial_state.set("package_delivered", StateVar::Bool(false));
+    let initial_state = WorldState::builder()
+        .int("x", 0)
+        .int("y", 0)
+        .int("battery", 300)
+        .bool("has_package", false)
+        .bool("package_delivered", false)
+        .build();
 
     // Goal state - deliver package to position (8,5)
-    let mut goal_state = WorldState::new();
-    goal_state.set("x", StateVar::I64(8));
-    goal_state.set("y", StateVar::I64(5));
-    goal_state.set("package_delivered", StateVar::Bool(true));
-
-    let goal = Goal::new("deliver_package", goal_state);
+    let goal = Goal::builder("deliver_package")
+        .require_int("x", 8)
+        .require_int("y", 5)
+        .require_bool("package_delivered", true)
+        .build();
 
     // Create planner
     let mut planner = Planner::new();
@@ -26,21 +25,15 @@ fn main() {
         let distance = ((to.0 - from.0).pow(2) + (to.1 - from.1).pow(2)) as f64;
         let battery_cost = (distance * 5.0) as i64; // Battery cost based on distance
 
-        let mut conditions = WorldState::new();
-        conditions.set("x", StateVar::I64(from.0));
-        conditions.set("y", StateVar::I64(from.1));
-        conditions.set("battery", StateVar::I64(battery_cost)); // Need enough battery
-
-        let mut effects = HashMap::new();
-        effects.insert("x".to_string(), StateOperation::Set(StateVar::I64(to.0)));
-        effects.insert("y".to_string(), StateOperation::Set(StateVar::I64(to.1)));
-        effects.insert(
-            "battery".to_string(),
-            StateOperation::Subtract(battery_cost),
-        );
-
-        let name = format!("goto_{}_{}_{}_{}", from.0, from.1, to.0, to.1);
-        Action::new(&name, distance, conditions, effects)
+        Action::builder(&format!("goto_{}_{}_{}_{}", from.0, from.1, to.0, to.1))
+            .cost(distance)
+            .precondition("x", from.0)
+            .precondition("y", from.1)
+            .precondition("battery", battery_cost)
+            .effect_set_to("x", to.0)
+            .effect_set_to("y", to.1)
+            .effect_subtract_int("battery", battery_cost)
+            .build()
     }
 
     // Add navigation waypoints
@@ -62,36 +55,23 @@ fn main() {
     }
 
     // Action: Pick up package
-    let mut pickup_conditions = WorldState::new();
-    pickup_conditions.set("x", StateVar::I64(5));
-    pickup_conditions.set("y", StateVar::I64(2));
-    pickup_conditions.set("has_package", StateVar::Bool(false));
-
-    let mut pickup_effects = HashMap::new();
-    pickup_effects.insert(
-        "has_package".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-
-    let pickup_action = Action::new("pickup_package", 1.0, pickup_conditions, pickup_effects);
+    let pickup_action = Action::builder("pickup_package")
+        .cost(1.0)
+        .precondition("x", 5)
+        .precondition("y", 2)
+        .precondition("has_package", false)
+        .effect_set_to("has_package", true)
+        .build();
 
     // Action: Deliver package
-    let mut deliver_conditions = WorldState::new();
-    deliver_conditions.set("x", StateVar::I64(8));
-    deliver_conditions.set("y", StateVar::I64(5));
-    deliver_conditions.set("has_package", StateVar::Bool(true));
-
-    let mut deliver_effects = HashMap::new();
-    deliver_effects.insert(
-        "has_package".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    deliver_effects.insert(
-        "package_delivered".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-
-    let deliver_action = Action::new("deliver_package", 1.0, deliver_conditions, deliver_effects);
+    let deliver_action = Action::builder("deliver_package")
+        .cost(1.0)
+        .precondition("x", 8)
+        .precondition("y", 5)
+        .precondition("has_package", true)
+        .effect_set_to("has_package", false)
+        .effect_set_to("package_delivered", true)
+        .build();
 
     // Add package actions
     planner.add_action(pickup_action);
@@ -123,7 +103,7 @@ fn main() {
     );
 
     for action in &actions {
-        current_state = action.execute(&current_state);
+        current_state = action.apply_effect(&current_state);
 
         if let (Some(StateVar::I64(x)), Some(StateVar::I64(y))) =
             (current_state.get("x"), current_state.get("y"))

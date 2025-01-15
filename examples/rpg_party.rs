@@ -1,176 +1,113 @@
-use std::collections::HashMap;
-
 use goap::prelude::*;
 
 fn main() {
     // Initial state - current party members and their attributes
-    let mut initial_state = WorldState::new();
-    // Party composition
-    initial_state.set("tank_available", StateVar::Bool(true));
-    initial_state.set("healer_available", StateVar::Bool(false));
-    initial_state.set("dps_available", StateVar::Bool(true));
-    // Party member stats
-    initial_state.set("tank_health", StateVar::I64(50));
-    initial_state.set("tank_armor", StateVar::I64(30));
-    initial_state.set("dps_damage", StateVar::I64(40));
-    initial_state.set("party_size", StateVar::I64(2));
-    // Status effects
-    initial_state.set("tank_poisoned", StateVar::Bool(true));
-    initial_state.set("dps_cursed", StateVar::Bool(true));
-    // Resources
-    initial_state.set("gold", StateVar::I64(400)); // Increased initial gold
-    initial_state.set("healing_potions", StateVar::I64(1));
-    initial_state.set("antidote_potions", StateVar::I64(0));
-    initial_state.set("remove_curse_scrolls", StateVar::I64(0));
+    let initial_state = WorldState::builder()
+        // Party composition
+        .bool("tank_available", true)
+        .bool("healer_available", false)
+        .bool("dps_available", true)
+        // Party member stats
+        .int("tank_health", 50)
+        .int("tank_armor", 30)
+        .int("dps_damage", 40)
+        .int("party_size", 2)
+        // Status effects
+        .bool("tank_poisoned", true)
+        .bool("dps_cursed", true)
+        // Resources
+        .int("gold", 400)
+        .int("healing_potions", 1)
+        .int("antidote_potions", 0)
+        .int("remove_curse_scrolls", 0)
+        .build();
 
     // Goal state - party ready for dungeon
-    let mut goal_state = WorldState::new();
-    goal_state.set("healer_available", StateVar::Bool(true));
-    goal_state.set("tank_health", StateVar::I64(100));
-    goal_state.set("tank_armor", StateVar::I64(50));
-    goal_state.set("tank_poisoned", StateVar::Bool(false));
-    goal_state.set("dps_cursed", StateVar::Bool(false));
-    goal_state.set("dps_damage", StateVar::I64(60));
-    goal_state.set("party_size", StateVar::I64(3));
-
-    let goal = Goal::new("prepare_dungeon_party", goal_state);
+    let goal = Goal::builder("prepare_dungeon_party")
+        .require_bool("healer_available", true)
+        .require_int("tank_health", 100)
+        .require_int("tank_armor", 50)
+        .require_bool("tank_poisoned", false)
+        .require_bool("dps_cursed", false)
+        .require_int("dps_damage", 60)
+        .require_int("party_size", 3)
+        .build();
 
     // Create planner
     let mut planner = Planner::new();
 
     // Action: Recruit Healer
-    let mut recruit_healer_effects = HashMap::new();
-    recruit_healer_effects.insert(
-        "healer_available".to_string(),
-        StateOperation::Set(StateVar::Bool(true)),
-    );
-    recruit_healer_effects.insert("party_size".to_string(), StateOperation::Add(1));
-    recruit_healer_effects.insert("gold".to_string(), StateOperation::Subtract(100));
-    let mut recruit_healer_conditions = WorldState::new();
-    recruit_healer_conditions.set("gold", StateVar::I64(100));
-    let recruit_healer = Action::new(
-        "recruit_healer",
-        3.0,
-        recruit_healer_conditions,
-        recruit_healer_effects,
-    );
+    let recruit_healer = Action::builder("recruit_healer")
+        .cost(3.0)
+        .precondition("gold", 100)
+        .effect_set_to("healer_available", true)
+        .effect_add_int("party_size", 1)
+        .effect_subtract_int("gold", 100)
+        .build();
 
     // Action: Buy Healing Potion
-    let mut buy_healing_effects = HashMap::new();
-    buy_healing_effects.insert("healing_potions".to_string(), StateOperation::Add(1));
-    buy_healing_effects.insert("gold".to_string(), StateOperation::Subtract(50));
-    let mut buy_healing_conditions = WorldState::new();
-    buy_healing_conditions.set("gold", StateVar::I64(50));
-    let buy_healing = Action::new(
-        "buy_healing_potion",
-        1.0,
-        buy_healing_conditions,
-        buy_healing_effects,
-    );
+    let buy_healing = Action::builder("buy_healing_potion")
+        .cost(1.0)
+        .precondition("gold", 50)
+        .effect_add_int("healing_potions", 1)
+        .effect_subtract_int("gold", 50)
+        .build();
 
     // Action: Buy Antidote
-    let mut buy_antidote_effects = HashMap::new();
-    buy_antidote_effects.insert("antidote_potions".to_string(), StateOperation::Add(1));
-    buy_antidote_effects.insert("gold".to_string(), StateOperation::Subtract(30));
-    let mut buy_antidote_conditions = WorldState::new();
-    buy_antidote_conditions.set("gold", StateVar::I64(30));
-    let buy_antidote = Action::new(
-        "buy_antidote",
-        1.0,
-        buy_antidote_conditions,
-        buy_antidote_effects,
-    );
+    let buy_antidote = Action::builder("buy_antidote")
+        .cost(1.0)
+        .precondition("gold", 30)
+        .effect_add_int("antidote_potions", 1)
+        .effect_subtract_int("gold", 30)
+        .build();
 
     // Action: Buy Remove Curse Scroll
-    let mut buy_scroll_effects = HashMap::new();
-    buy_scroll_effects.insert("remove_curse_scrolls".to_string(), StateOperation::Add(1));
-    buy_scroll_effects.insert("gold".to_string(), StateOperation::Subtract(40));
-    let mut buy_scroll_conditions = WorldState::new();
-    buy_scroll_conditions.set("gold", StateVar::I64(40));
-    let buy_scroll = Action::new(
-        "buy_remove_curse_scroll",
-        1.0,
-        buy_scroll_conditions,
-        buy_scroll_effects,
-    );
+    let buy_scroll = Action::builder("buy_remove_curse_scroll")
+        .cost(1.0)
+        .precondition("gold", 40)
+        .effect_add_int("remove_curse_scrolls", 1)
+        .effect_subtract_int("gold", 40)
+        .build();
 
     // Action: Heal Tank
-    let mut heal_tank_effects = HashMap::new();
-    heal_tank_effects.insert(
-        "tank_health".to_string(),
-        StateOperation::Set(StateVar::I64(100)),
-    );
-    heal_tank_effects.insert("healing_potions".to_string(), StateOperation::Subtract(1));
-    let mut heal_tank_conditions = WorldState::new();
-    heal_tank_conditions.set("healing_potions", StateVar::I64(1));
-    let heal_tank = Action::new("heal_tank", 1.0, heal_tank_conditions, heal_tank_effects);
+    let heal_tank = Action::builder("heal_tank")
+        .cost(1.0)
+        .precondition("healing_potions", 1)
+        .effect_set_to("tank_health", 100)
+        .effect_subtract_int("healing_potions", 1)
+        .build();
 
     // Action: Cure Tank Poison
-    let mut cure_poison_effects = HashMap::new();
-    cure_poison_effects.insert(
-        "tank_poisoned".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    cure_poison_effects.insert("antidote_potions".to_string(), StateOperation::Subtract(1));
-    let mut cure_poison_conditions = WorldState::new();
-    cure_poison_conditions.set("antidote_potions", StateVar::I64(1));
-    let cure_poison = Action::new(
-        "cure_tank_poison",
-        1.0,
-        cure_poison_conditions,
-        cure_poison_effects,
-    );
+    let cure_poison = Action::builder("cure_tank_poison")
+        .cost(1.0)
+        .precondition("antidote_potions", 1)
+        .effect_set_to("tank_poisoned", false)
+        .effect_subtract_int("antidote_potions", 1)
+        .build();
 
     // Action: Remove DPS Curse
-    let mut remove_curse_effects = HashMap::new();
-    remove_curse_effects.insert(
-        "dps_cursed".to_string(),
-        StateOperation::Set(StateVar::Bool(false)),
-    );
-    remove_curse_effects.insert(
-        "remove_curse_scrolls".to_string(),
-        StateOperation::Subtract(1),
-    );
-    let mut remove_curse_conditions = WorldState::new();
-    remove_curse_conditions.set("remove_curse_scrolls", StateVar::I64(1));
-    let remove_curse = Action::new(
-        "remove_dps_curse",
-        1.0,
-        remove_curse_conditions,
-        remove_curse_effects,
-    );
+    let remove_curse = Action::builder("remove_dps_curse")
+        .cost(1.0)
+        .precondition("remove_curse_scrolls", 1)
+        .effect_set_to("dps_cursed", false)
+        .effect_subtract_int("remove_curse_scrolls", 1)
+        .build();
 
     // Action: Upgrade Tank Armor
-    let mut upgrade_armor_effects = HashMap::new();
-    upgrade_armor_effects.insert(
-        "tank_armor".to_string(),
-        StateOperation::Set(StateVar::I64(50)),
-    );
-    upgrade_armor_effects.insert("gold".to_string(), StateOperation::Subtract(80));
-    let mut upgrade_armor_conditions = WorldState::new();
-    upgrade_armor_conditions.set("gold", StateVar::I64(80));
-    let upgrade_armor = Action::new(
-        "upgrade_tank_armor",
-        2.0,
-        upgrade_armor_conditions,
-        upgrade_armor_effects,
-    );
+    let upgrade_armor = Action::builder("upgrade_tank_armor")
+        .cost(2.0)
+        .precondition("gold", 80)
+        .effect_set_to("tank_armor", 50)
+        .effect_subtract_int("gold", 80)
+        .build();
 
     // Action: Upgrade DPS Weapon
-    let mut upgrade_weapon_effects = HashMap::new();
-    upgrade_weapon_effects.insert(
-        "dps_damage".to_string(),
-        StateOperation::Set(StateVar::I64(60)),
-    );
-    upgrade_weapon_effects.insert("gold".to_string(), StateOperation::Subtract(90));
-    let mut upgrade_weapon_conditions = WorldState::new();
-    upgrade_weapon_conditions.set("gold", StateVar::I64(90));
-    let upgrade_weapon = Action::new(
-        "upgrade_dps_weapon",
-        2.0,
-        upgrade_weapon_conditions,
-        upgrade_weapon_effects,
-    );
+    let upgrade_weapon = Action::builder("upgrade_dps_weapon")
+        .cost(2.0)
+        .precondition("gold", 90)
+        .effect_set_to("dps_damage", 60)
+        .effect_subtract_int("gold", 90)
+        .build();
 
     // Add all actions to planner
     planner.add_action(recruit_healer);
@@ -247,7 +184,7 @@ fn main() {
 
     println!("\nSimulating plan execution:");
     for action in &actions {
-        current_state = action.execute(&current_state);
+        current_state = action.apply_effect(&current_state);
         println!("After {}: ", action.name);
         println!("  Gold: {}", remaining_gold);
         if let Some(StateVar::I64(party_size)) = current_state.get("party_size") {
