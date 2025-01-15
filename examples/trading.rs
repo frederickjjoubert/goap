@@ -26,8 +26,6 @@ fn main() {
         .require_bool("has_guild_membership", true)
         .build();
 
-    let mut planner = Planner::new();
-
     // Action: Join Merchant's Guild
     let join_guild = Action::builder("join_guild")
         .cost(5.0)
@@ -174,22 +172,27 @@ fn main() {
         .effect_add_int("reputation", 30)
         .build();
 
-    // Add all actions to planner
-    planner.add_action(join_guild);
-    planner.add_action(buy_warehouse);
-    planner.add_action(buy_caravan);
-    planner.add_action(buy_grain);
-    planner.add_action(buy_ore);
-    planner.add_action(buy_textiles);
-    planner.add_action(sell_grain_local);
-    planner.add_action(sell_grain_distant);
-    planner.add_action(sell_ore_local);
-    planner.add_action(sell_ore_distant);
-    planner.add_action(sell_textiles_local);
-    planner.add_action(sell_textiles_distant);
-    planner.add_action(establish_route);
+    // Collect all actions
+    let actions = vec![
+        join_guild,
+        buy_warehouse,
+        buy_caravan,
+        buy_grain,
+        buy_ore,
+        buy_textiles,
+        sell_grain_local,
+        sell_grain_distant,
+        sell_ore_local,
+        sell_ore_distant,
+        sell_textiles_local,
+        sell_textiles_distant,
+        establish_route,
+    ];
 
-    match planner.plan(initial_state.clone(), &goal) {
+    // Create planner
+    let planner = Planner::new();
+
+    match planner.plan(initial_state.clone(), &goal, &actions) {
         Some((actions, cost)) => {
             println!(
                 "\nFound trading plan with {} actions and cost {:.2}:",

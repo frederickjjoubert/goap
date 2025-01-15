@@ -25,9 +25,6 @@ fn main() {
         .require_bool("has_turrets", true) // Active defense
         .build();
 
-    // Create planner
-    let mut planner = Planner::new();
-
     // Action: Build Mining Facility
     let build_mine = Action::builder("build_mine")
         .cost(3.0)
@@ -106,22 +103,27 @@ fn main() {
         .effect_subtract_int("components", 10)
         .build();
 
-    // Add all actions to planner
-    planner.add_action(build_mine);
-    planner.add_action(mine_resources);
-    planner.add_action(build_factory);
-    planner.add_action(craft_components);
-    planner.add_action(build_solar);
-    planner.add_action(build_battery);
-    planner.add_action(charge_battery);
-    planner.add_action(build_walls);
-    planner.add_action(build_turrets);
+    // Collect all actions
+    let actions = vec![
+        build_mine,
+        mine_resources,
+        build_factory,
+        craft_components,
+        build_solar,
+        build_battery,
+        charge_battery,
+        build_walls,
+        build_turrets,
+    ];
 
     // Store a copy of initial state for later comparison
     let initial_state_copy = initial_state.clone();
 
+    // Create planner
+    let planner = Planner::new();
+
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal);
+    let plan_result = planner.plan(initial_state, &goal, &actions);
     assert!(
         plan_result.is_some(),
         "Expected to find a valid plan for base building"

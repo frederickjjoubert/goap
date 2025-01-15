@@ -19,9 +19,6 @@ fn main() {
         .require_int("ammo", 50) // Sufficient ammo
         .build();
 
-    // Create actions
-    let mut planner = Planner::new();
-
     // Action: Move to medical bay
     let goto_medical = Action::builder("goto_medical")
         .cost(1.0)
@@ -73,19 +70,24 @@ fn main() {
         .effect_subtract_int("has_credits", 25)
         .build();
 
-    // Add all actions to planner
-    planner.add_action(goto_medical);
-    planner.add_action(goto_armory);
-    planner.add_action(goto_trading);
-    planner.add_action(heal);
-    planner.add_action(buy_armor);
-    planner.add_action(buy_ammo);
+    // Collect all actions
+    let actions = vec![
+        goto_medical,
+        goto_armory,
+        goto_trading,
+        heal,
+        buy_armor,
+        buy_ammo,
+    ];
 
     // Store a copy of initial state for later comparison
     let initial_state_copy = initial_state.clone();
 
+    // Create planner
+    let planner = Planner::new();
+
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal);
+    let plan_result = planner.plan(initial_state, &goal, &actions);
     assert!(
         plan_result.is_some(),
         "Expected to find a valid plan for combat preparation"

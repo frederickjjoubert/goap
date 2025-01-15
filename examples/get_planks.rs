@@ -42,15 +42,14 @@ fn main() {
         .effect_set_to("has_wood", true)
         .build();
 
-    // Create planner and add actions
-    let mut planner = Planner::new();
-    planner.add_action(goto_store);
-    planner.add_action(buy_axe);
-    planner.add_action(goto_tree);
-    planner.add_action(chop_tree);
+    // Collect all actions
+    let actions = vec![goto_store, buy_axe, goto_tree, chop_tree];
+
+    // Create planner
+    let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal);
+    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
     assert!(plan_result.is_some(), "Expected to find a valid plan");
 
     let (actions, total_cost) = plan_result.unwrap();

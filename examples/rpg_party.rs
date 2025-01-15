@@ -33,9 +33,6 @@ fn main() {
         .require_int("party_size", 3)
         .build();
 
-    // Create planner
-    let mut planner = Planner::new();
-
     // Action: Recruit Healer
     let recruit_healer = Action::builder("recruit_healer")
         .cost(3.0)
@@ -109,22 +106,24 @@ fn main() {
         .effect_subtract_int("gold", 90)
         .build();
 
-    // Add all actions to planner
-    planner.add_action(recruit_healer);
-    planner.add_action(buy_healing);
-    planner.add_action(buy_antidote);
-    planner.add_action(buy_scroll);
-    planner.add_action(heal_tank);
-    planner.add_action(cure_poison);
-    planner.add_action(remove_curse);
-    planner.add_action(upgrade_armor);
-    planner.add_action(upgrade_weapon);
+    // Collect all actions
+    let actions = vec![
+        recruit_healer,
+        buy_healing,
+        buy_antidote,
+        buy_scroll,
+        heal_tank,
+        cure_poison,
+        remove_curse,
+        upgrade_armor,
+        upgrade_weapon,
+    ];
 
-    // Store a copy of initial state for later comparison
-    let initial_state_copy = initial_state.clone();
+    // Create planner
+    let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal);
+    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
     assert!(
         plan_result.is_some(),
         "Expected to find a valid plan for party management"
@@ -179,7 +178,7 @@ fn main() {
     );
 
     // Simulate plan execution to verify final state
-    let mut current_state = initial_state_copy;
+    let mut current_state = initial_state.clone();
     let remaining_gold = 400;
 
     println!("\nSimulating plan execution:");

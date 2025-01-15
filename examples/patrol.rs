@@ -22,9 +22,6 @@ fn main() {
         .require_bool("at_base", true)
         .build();
 
-    // Create planner
-    let mut planner = Planner::new();
-
     // Action: Equip Radio at Base
     let equip_radio = Action::builder("equip_radio")
         .cost(1.0)
@@ -95,21 +92,26 @@ fn main() {
         .effect_set_to("reported_at_c", true)
         .build();
 
-    // Add all actions to planner
-    planner.add_action(equip_radio);
-    planner.add_action(goto_point_a);
-    planner.add_action(goto_point_b);
-    planner.add_action(goto_point_c);
-    planner.add_action(goto_base);
-    planner.add_action(report_at_a);
-    planner.add_action(report_at_b);
-    planner.add_action(report_at_c);
+    // Collect all actions
+    let actions = vec![
+        equip_radio,
+        goto_point_a,
+        goto_point_b,
+        goto_point_c,
+        goto_base,
+        report_at_a,
+        report_at_b,
+        report_at_c,
+    ];
 
     // Store initial state for comparison
     let initial_state_copy = initial_state.clone();
 
+    // Create planner
+    let planner = Planner::new();
+
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal);
+    let plan_result = planner.plan(initial_state, &goal, &actions);
     assert!(
         plan_result.is_some(),
         "Expected to find a valid patrol plan"

@@ -25,9 +25,6 @@ fn main() {
         .require_int("guard_alert_level", 0)
         .build();
 
-    // Create planner
-    let mut planner = Planner::new();
-
     // Action: Observe Guard Patterns
     let observe_guards = Action::builder("observe_guard_patterns")
         .cost(2.0)
@@ -83,20 +80,22 @@ fn main() {
         .effect_set_to("target_location_accessible", true)
         .build();
 
-    // Add all actions to planner
-    planner.add_action(observe_guards);
-    planner.add_action(acquire_disguise);
-    planner.add_action(obtain_tools);
-    planner.add_action(hack_security);
-    planner.add_action(create_distraction);
-    planner.add_action(move_to_security);
-    planner.add_action(move_to_vault);
+    // Collect all actions
+    let actions = vec![
+        observe_guards,
+        acquire_disguise,
+        obtain_tools,
+        hack_security,
+        create_distraction,
+        move_to_security,
+        move_to_vault,
+    ];
 
-    // Store a copy of initial state for later comparison
-    let initial_state_copy = initial_state.clone();
+    // Create planner
+    let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal);
+    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
     assert!(
         plan_result.is_some(),
         "Expected to find a valid plan for stealth mission"
@@ -137,7 +136,7 @@ fn main() {
     );
 
     // Simulate plan execution to verify final state
-    let mut current_state = initial_state_copy;
+    let mut current_state = initial_state.clone();
 
     println!("\nSimulating plan execution:");
     for action in &actions {

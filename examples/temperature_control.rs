@@ -1,8 +1,6 @@
 use goap::prelude::*;
 
 fn main() {
-    let mut planner = Planner::new();
-
     // Initial state: Room is 22.5°C, heater and cooler are off
     let initial_state = WorldState::builder()
         .float("temperature", 22.5)
@@ -52,18 +50,18 @@ fn main() {
         .effect_subtract_float("power_available", 8.0) // Consumes 8% power per cooling cycle
         .build();
 
-    // Add actions to planner
-    planner.add_action(turn_on_heater);
-    planner.add_action(heat_room);
-    planner.add_action(turn_on_cooler);
-    planner.add_action(cool_room);
+    // Collect all actions
+    let actions = vec![turn_on_heater, heat_room, turn_on_cooler, cool_room];
+
+    // Create planner
+    let planner = Planner::new();
 
     // Find plan
     println!("Planning to adjust room temperature...");
     println!("Initial state: {:?}", initial_state);
     println!("Goal state: {:?}", goal);
 
-    match planner.plan(initial_state.clone(), &goal) {
+    match planner.plan(initial_state.clone(), &goal, &actions) {
         Some((actions, cost)) => {
             println!(
                 "\nFound plan with {} actions and cost {:.2}:",

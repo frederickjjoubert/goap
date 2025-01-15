@@ -55,16 +55,14 @@ fn main() {
         .effect_set_to("wood_logs", 0)
         .build();
 
-    // Create planner and add actions
-    let mut planner = Planner::new();
-    planner.add_action(goto_store);
-    planner.add_action(buy_saw);
-    planner.add_action(goto_forest);
-    planner.add_action(gather_wood);
-    planner.add_action(craft_planks);
+    // Collect all actions
+    let actions = vec![goto_store, buy_saw, goto_forest, gather_wood, craft_planks];
+
+    // Create planner
+    let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal);
+    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
 
     // Assert that a plan was found
     assert!(plan_result.is_some(), "Expected to find a valid plan");

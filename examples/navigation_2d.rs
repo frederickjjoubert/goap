@@ -17,9 +17,6 @@ fn main() {
         .require_bool("package_delivered", true)
         .build();
 
-    // Create planner
-    let mut planner = Planner::new();
-
     // Helper function to create GoTo actions between points
     fn create_goto_action(from: (i64, i64), to: (i64, i64)) -> Action {
         let distance = ((to.0 - from.0).pow(2) + (to.1 - from.1).pow(2)) as f64;
@@ -45,11 +42,12 @@ fn main() {
         (8, 5), // Destination
     ];
 
-    // Create GoTo actions between waypoints
+    // Create all navigation actions
+    let mut actions = Vec::new();
     for i in 0..waypoints.len() {
         for j in 0..waypoints.len() {
             if i != j {
-                planner.add_action(create_goto_action(waypoints[i], waypoints[j]));
+                actions.push(create_goto_action(waypoints[i], waypoints[j]));
             }
         }
     }
@@ -74,11 +72,14 @@ fn main() {
         .build();
 
     // Add package actions
-    planner.add_action(pickup_action);
-    planner.add_action(deliver_action);
+    actions.push(pickup_action);
+    actions.push(deliver_action);
+
+    // Create planner
+    let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal);
+    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
     assert!(plan_result.is_some(), "Expected to find a valid plan");
 
     let (actions, total_cost) = plan_result.unwrap();
