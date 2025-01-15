@@ -2,5 +2,8 @@
 name = "goap"
 version = "0.1.0"
 edition = "2021"
+authors = [
+    "Jacques Joubert <20562845+frederickjjoubert@users.noreply.github.com>",
+]
 
 [dependencies]
