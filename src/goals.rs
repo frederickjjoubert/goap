@@ -1,8 +1,11 @@
-use crate::state::WorldState;
+use crate::state::{StateVar, WorldState};
 
+/// A goal is a desired state of the world that an agent wants to achieve.
 #[derive(Clone, Debug)]
 pub struct Goal {
+    /// The name of the goal.
     pub name: String,
+    /// The desired state of the world that this goal represents.
     pub desired_state: WorldState,
 }
 
@@ -16,6 +19,51 @@ impl Goal {
 
     pub fn is_satisfied(&self, state: &WorldState) -> bool {
         state.satisfies(&self.desired_state)
+    }
+
+    pub fn builder(name: &str) -> GoalBuilder {
+        GoalBuilder::new(name)
+    }
+}
+
+pub struct GoalBuilder {
+    name: String,
+    desired_state: WorldState,
+}
+
+impl GoalBuilder {
+    pub fn new(name: &str) -> Self {
+        GoalBuilder {
+            name: name.to_string(),
+            desired_state: WorldState::new(),
+        }
+    }
+
+    pub fn require_bool(mut self, key: &str, value: bool) -> Self {
+        self.desired_state.set(key, StateVar::Bool(value));
+        self
+    }
+
+    pub fn require_int(mut self, key: &str, value: i64) -> Self {
+        self.desired_state.set(key, StateVar::I64(value));
+        self
+    }
+
+    pub fn require_float(mut self, key: &str, value: f64) -> Self {
+        self.desired_state.set(key, StateVar::from_f64(value));
+        self
+    }
+
+    pub fn require_enum(mut self, key: &str, value: impl Into<String>) -> Self {
+        self.desired_state.set(key, StateVar::Enum(value.into()));
+        self
+    }
+
+    pub fn build(self) -> Goal {
+        Goal {
+            name: self.name,
+            desired_state: self.desired_state,
+        }
     }
 }
 
@@ -120,5 +168,76 @@ mod tests {
         insufficient_state.set("speed", StateVar::from_f64(1.0));
         insufficient_state.set("distance", StateVar::from_f64(5.0));
         assert!(!goal.is_satisfied(&insufficient_state));
+    }
+
+    #[test]
+    fn test_goal_builder() {
+        let goal = Goal::builder("reach_destination")
+            .require_bool("has_fuel", true)
+            .require_int("passengers", 4)
+            .require_float("speed", 60.0)
+            .require_enum("location", "airport")
+            .build();
+
+        assert_eq!(goal.name, "reach_destination");
+        assert_eq!(
+            goal.desired_state.get("has_fuel"),
+            Some(&StateVar::Bool(true))
+        );
+        assert_eq!(
+            goal.desired_state.get("passengers"),
+            Some(&StateVar::I64(4))
+        );
+        assert_eq!(goal.desired_state.get("speed"), Some(&StateVar::F64(60000))); // 60.0 stored as fixed point
+        assert_eq!(
+            goal.desired_state.get("location"),
+            Some(&StateVar::Enum("airport".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_goal_builder_chaining() {
+        let goal = Goal::builder("complex_goal")
+            // Chain multiple bools
+            .require_bool("has_fuel", true)
+            .require_bool("engine_running", true)
+            // Chain multiple ints
+            .require_int("passengers", 4)
+            .require_int("luggage", 2)
+            // Chain multiple floats
+            .require_float("speed", 60.0)
+            .require_float("fuel_level", 75.5)
+            // Chain multiple enums
+            .require_enum("location", "airport")
+            .require_enum("weather", "clear")
+            .build();
+
+        // Test all values were set correctly
+        assert_eq!(
+            goal.desired_state.get("has_fuel"),
+            Some(&StateVar::Bool(true))
+        );
+        assert_eq!(
+            goal.desired_state.get("engine_running"),
+            Some(&StateVar::Bool(true))
+        );
+        assert_eq!(
+            goal.desired_state.get("passengers"),
+            Some(&StateVar::I64(4))
+        );
+        assert_eq!(goal.desired_state.get("luggage"), Some(&StateVar::I64(2)));
+        assert_eq!(goal.desired_state.get("speed"), Some(&StateVar::F64(60000)));
+        assert_eq!(
+            goal.desired_state.get("fuel_level"),
+            Some(&StateVar::F64(75500))
+        );
+        assert_eq!(
+            goal.desired_state.get("location"),
+            Some(&StateVar::Enum("airport".to_string()))
+        );
+        assert_eq!(
+            goal.desired_state.get("weather"),
+            Some(&StateVar::Enum("clear".to_string()))
+        );
     }
 }

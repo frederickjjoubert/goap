@@ -98,6 +98,56 @@ impl StateVar {
     }
 }
 
+// From implementations for common types
+impl From<bool> for StateVar {
+    fn from(value: bool) -> Self {
+        StateVar::Bool(value)
+    }
+}
+
+impl From<i64> for StateVar {
+    fn from(value: i64) -> Self {
+        StateVar::I64(value)
+    }
+}
+
+impl From<f64> for StateVar {
+    fn from(value: f64) -> Self {
+        StateVar::from_f64(value)
+    }
+}
+
+impl From<String> for StateVar {
+    fn from(value: String) -> Self {
+        StateVar::Enum(value)
+    }
+}
+
+impl From<&str> for StateVar {
+    fn from(value: &str) -> Self {
+        StateVar::Enum(value.to_string())
+    }
+}
+
+// Add these convenience implementations for smaller integer types
+impl From<i32> for StateVar {
+    fn from(value: i32) -> Self {
+        StateVar::I64(value as i64)
+    }
+}
+
+impl From<i16> for StateVar {
+    fn from(value: i16) -> Self {
+        StateVar::I64(value as i64)
+    }
+}
+
+impl From<i8> for StateVar {
+    fn from(value: i8) -> Self {
+        StateVar::I64(value as i64)
+    }
+}
+
 // First, let's define how a state variable can be modified
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum StateOperation {
@@ -107,6 +157,42 @@ pub enum StateOperation {
 }
 
 impl StateOperation {
+    /// Creates a Set operation that will set the value to the given i64 value.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let op = StateOperation::set_i64(100); // Will set the value to 100
+    /// assert_eq!(op, StateOperation::Set(StateVar::I64(100)));
+    /// ```
+    pub fn set_i64(value: i64) -> Self {
+        StateOperation::Set(StateVar::I64(value))
+    }
+
+    /// Creates an Add operation that will add the given i64 value.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let op = StateOperation::add_i64(50); // Will add 50 to the value
+    /// assert_eq!(op, StateOperation::Add(50));
+    /// ```
+    pub fn add_i64(value: i64) -> Self {
+        StateOperation::Add(value)
+    }
+
+    /// Creates a Subtract operation that will subtract the given i64 value.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let op = StateOperation::subtract_i64(50); // Will subtract 50 from the value
+    /// assert_eq!(op, StateOperation::Subtract(50));
+    /// ```
+    pub fn subtract_i64(value: i64) -> Self {
+        StateOperation::Subtract(value)
+    }
+
     /// Creates a Set operation that will set the value to the given f64 value.
     /// The value will be converted to fixed point with 3 decimal places.
     ///
@@ -257,6 +343,47 @@ impl WorldState {
         for (key, value) in &other.vars {
             self.vars.insert(key.clone(), value.clone());
         }
+    }
+
+    pub fn builder() -> WorldStateBuilder {
+        WorldStateBuilder::new()
+    }
+}
+
+pub struct WorldStateBuilder {
+    vars: HashMap<String, StateVar>,
+}
+
+impl WorldStateBuilder {
+    pub fn new() -> Self {
+        WorldStateBuilder {
+            vars: HashMap::new(),
+        }
+    }
+
+    pub fn bool(mut self, key: &str, value: bool) -> Self {
+        self.vars.insert(key.to_string(), StateVar::Bool(value));
+        self
+    }
+
+    pub fn int(mut self, key: &str, value: i64) -> Self {
+        self.vars.insert(key.to_string(), StateVar::I64(value));
+        self
+    }
+
+    pub fn float(mut self, key: &str, value: f64) -> Self {
+        self.vars.insert(key.to_string(), StateVar::from_f64(value));
+        self
+    }
+
+    pub fn enum_val(mut self, key: &str, value: impl Into<String>) -> Self {
+        self.vars
+            .insert(key.to_string(), StateVar::Enum(value.into()));
+        self
+    }
+
+    pub fn build(self) -> WorldState {
+        WorldState { vars: self.vars }
     }
 }
 
@@ -736,8 +863,8 @@ mod tests {
         state.set("speed", StateVar::from_f64(1.5));
         state.set("height", StateVar::from_f64(2.0));
 
-        assert_eq!(state.get("speed").and_then(|v| v.as_f64()), Some(1.5));
-        assert_eq!(state.get("height").and_then(|v| v.as_f64()), Some(2.0));
+        assert_eq!(state.get("speed"), Some(&StateVar::F64(1500)));
+        assert_eq!(state.get("height"), Some(&StateVar::F64(2000)));
 
         // Test satisfies with F64 values
         let mut conditions;
@@ -834,5 +961,96 @@ mod tests {
         changes.insert("round".to_string(), StateOperation::add_f64(0.1234)); // Should round to 0.123
         state.apply(&changes);
         assert_eq!(state.get("round").and_then(|v| v.as_f64()), Some(1.123));
+    }
+
+    #[test]
+    fn test_state_var_from_implementations() {
+        // Test bool conversion
+        let bool_var: StateVar = true.into();
+        assert_eq!(bool_var, StateVar::Bool(true));
+
+        // Test i64 conversion
+        let i64_var: StateVar = 42i64.into();
+        assert_eq!(i64_var, StateVar::I64(42));
+
+        // Test f64 conversion
+        let f64_var: StateVar = 1.5f64.into();
+        assert_eq!(f64_var, StateVar::F64(1500));
+
+        // Test String conversion
+        let string_var: StateVar = "test".to_string().into();
+        assert_eq!(string_var, StateVar::Enum("test".to_string()));
+
+        // Test str conversion
+        let str_var: StateVar = "test".into();
+        assert_eq!(str_var, StateVar::Enum("test".to_string()));
+
+        // Test smaller integer conversions
+        let i32_var: StateVar = 42i32.into();
+        assert_eq!(i32_var, StateVar::I64(42));
+
+        let i16_var: StateVar = 42i16.into();
+        assert_eq!(i16_var, StateVar::I64(42));
+
+        let i8_var: StateVar = 42i8.into();
+        assert_eq!(i8_var, StateVar::I64(42));
+    }
+
+    #[test]
+    fn test_world_state_builder() {
+        let state = WorldState::builder()
+            .bool("has_wood", true)
+            .int("energy", 100)
+            .float("temperature", 22.5)
+            .enum_val("location", "forest")
+            .build();
+
+        // Test boolean value
+        assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
+
+        // Test integer value
+        assert_eq!(state.get("energy"), Some(&StateVar::I64(100)));
+
+        // Test float value (remember it's stored as fixed point)
+        assert_eq!(
+            state.get("temperature"),
+            Some(&StateVar::F64(22500)) // 22.5 * 1000
+        );
+
+        // Test enum value
+        assert_eq!(
+            state.get("location"),
+            Some(&StateVar::Enum("forest".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_world_state_builder_chaining() {
+        // Test that we can chain multiple values of the same type
+        let state = WorldState::builder()
+            .bool("has_wood", true)
+            .bool("has_tools", false)
+            .int("wood_count", 5)
+            .int("tool_count", 0)
+            .float("health", 100.0)
+            .float("energy", 50.0)
+            .enum_val("location", "forest")
+            .enum_val("weather", "sunny")
+            .build();
+
+        assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
+        assert_eq!(state.get("has_tools"), Some(&StateVar::Bool(false)));
+        assert_eq!(state.get("wood_count"), Some(&StateVar::I64(5)));
+        assert_eq!(state.get("tool_count"), Some(&StateVar::I64(0)));
+        assert_eq!(state.get("health"), Some(&StateVar::F64(100000)));
+        assert_eq!(state.get("energy"), Some(&StateVar::F64(50000)));
+        assert_eq!(
+            state.get("location"),
+            Some(&StateVar::Enum("forest".to_string()))
+        );
+        assert_eq!(
+            state.get("weather"),
+            Some(&StateVar::Enum("sunny".to_string()))
+        );
     }
 }

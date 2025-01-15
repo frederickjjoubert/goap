@@ -103,7 +103,7 @@ impl Planner {
         let mut transitions = Vec::new();
         for action in &self.actions {
             if action.can_execute(state) {
-                let new_state = action.execute(state);
+                let new_state = action.apply_effect(state);
                 transitions.push((new_state, action.cost, action.clone()));
             }
         }
