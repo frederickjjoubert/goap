@@ -31,9 +31,7 @@ impl<N: Eq> PartialOrd for NodeWrapper<N> {
     }
 }
 
-pub struct Planner {
-    actions: Vec<Action>,
-}
+pub struct Planner {}
 
 impl Default for Planner {
     fn default() -> Self {
@@ -43,16 +41,15 @@ impl Default for Planner {
 
 impl Planner {
     pub fn new() -> Self {
-        Planner {
-            actions: Vec::new(),
-        }
+        Planner {}
     }
 
-    pub fn add_action(&mut self, action: Action) {
-        self.actions.push(action);
-    }
-
-    pub fn plan(&self, initial_state: WorldState, goal: &Goal) -> Option<(Vec<Action>, f64)> {
+    pub fn plan(
+        &self,
+        initial_state: WorldState,
+        goal: &Goal,
+        actions: &[Action],
+    ) -> Option<(Vec<Action>, f64)> {
         let mut open_set = BinaryHeap::new();
         let mut came_from = HashMap::new();
         let mut g_score = HashMap::new();
@@ -76,7 +73,7 @@ impl Planner {
             }
 
             let current_g = *g_score.get(&current).unwrap();
-            let transitions = self.get_valid_transitions(&current);
+            let transitions = self.get_valid_transitions(&current, actions);
 
             for (next_state, cost, action) in transitions {
                 let tentative_g = current_g + cost;
@@ -99,9 +96,13 @@ impl Planner {
         None
     }
 
-    fn get_valid_transitions(&self, state: &WorldState) -> Vec<(WorldState, f64, Action)> {
+    fn get_valid_transitions(
+        &self,
+        state: &WorldState,
+        actions: &[Action],
+    ) -> Vec<(WorldState, f64, Action)> {
         let mut transitions = Vec::new();
-        for action in &self.actions {
+        for action in actions {
             if action.can_execute(state) {
                 let new_state = action.apply_effect(state);
                 transitions.push((new_state, action.cost, action.clone()));
@@ -176,23 +177,8 @@ mod tests {
     }
 
     #[test]
-    fn test_planner_new() {
-        let planner = Planner::new();
-        assert!(planner.actions.is_empty());
-    }
-
-    #[test]
-    fn test_planner_add_action() {
-        let mut planner = Planner::new();
-        let action = Action::new("test", 1.0, WorldState::new(), HashMap::new());
-        planner.add_action(action.clone());
-        assert_eq!(planner.actions.len(), 1);
-        assert_eq!(planner.actions[0].name, "test");
-    }
-
-    #[test]
     fn test_planner_simple_plan() {
-        let mut planner = Planner::new();
+        let planner = Planner::new();
 
         // Initial state
         let mut initial_state = WorldState::new();
@@ -210,10 +196,10 @@ mod tests {
             StateOperation::Set(StateVar::Bool(true)),
         );
         let action = Action::new("get_wood", 1.0, WorldState::new(), effects);
-        planner.add_action(action);
+        let actions = vec![action];
 
         // Find plan
-        let result = planner.plan(initial_state, &goal);
+        let result = planner.plan(initial_state, &goal, &actions);
         assert!(result.is_some());
 
         let (actions, cost) = result.unwrap();
@@ -224,7 +210,7 @@ mod tests {
 
     #[test]
     fn test_planner_no_solution() {
-        let mut planner = Planner::new();
+        let planner = Planner::new();
 
         // Initial state
         let mut initial_state = WorldState::new();
@@ -242,16 +228,16 @@ mod tests {
             StateOperation::Set(StateVar::Bool(true)),
         );
         let action = Action::new("get_wood", 1.0, WorldState::new(), effects);
-        planner.add_action(action);
+        let actions = vec![action];
 
         // Should find no solution
-        let result = planner.plan(initial_state, &goal);
+        let result = planner.plan(initial_state, &goal, &actions);
         assert!(result.is_none());
     }
 
     #[test]
     fn test_planner_multi_step_plan() {
-        let mut planner = Planner::new();
+        let planner = Planner::new();
 
         // Initial state
         let mut initial_state = WorldState::new();
@@ -281,11 +267,10 @@ mod tests {
         planks_conditions.set("has_wood", StateVar::Bool(true));
         let craft_planks = Action::new("craft_planks", 2.0, planks_conditions, planks_effects);
 
-        planner.add_action(get_wood);
-        planner.add_action(craft_planks);
+        let actions = vec![get_wood, craft_planks];
 
         // Find plan
-        let result = planner.plan(initial_state, &goal);
+        let result = planner.plan(initial_state, &goal, &actions);
         assert!(result.is_some());
 
         let (actions, cost) = result.unwrap();
