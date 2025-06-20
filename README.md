@@ -4,7 +4,7 @@ A general purpose Goal Oriented Action Planning (GOAP) framework written in Rust
 
 - Goals are a desired state of the world that an agent wants to achieve.
 - Actions are the atomic operations that can be performed in the world, requiring preconditions and having effects.
-- State is a collection of state variables that represent the current state of the world.
+- State is a collection of variables that represent the current state of the world.
 
 Simply define goals, actions, and the world state, and the planner will find the best possible path of actions to achieve the goal.
 
@@ -12,7 +12,7 @@ Simply define goals, actions, and the world state, and the planner will find the
 
 ### Goals
 
-Goals define a desired world state. Create goals using the builder pattern:
+Goals define a desired state. Create goals using the builder pattern:
 
 ```rust
 use goap::prelude::*;
@@ -54,12 +54,12 @@ let craft = Action::builder("craft_item")
 
 ### State
 
-WorldState represents the current state of the world:
+State represents the current state of the world:
 
 ```rust
 use goap::prelude::*;
 
-let state = WorldState::builder()
+let state = State::builder()
     // All possible state types
     .bool("has_tools", true)             // Boolean state
     .int("materials", 10)                // Integer state
