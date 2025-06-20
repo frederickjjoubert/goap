@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - guard starts at base without radio
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .bool("at_base", true)
         .bool("at_point_a", false)
         .bool("at_point_b", false)
@@ -112,15 +112,12 @@ fn main() {
 
     // Find plan
     let plan_result = planner.plan(initial_state, &goal, &actions);
-    assert!(
-        plan_result.is_some(),
-        "Expected to find a valid patrol plan"
-    );
+    assert!(plan_result.is_ok(), "Expected to find a valid patrol plan");
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
-    println!("\nPatrol Mission Plan found with cost {}", total_cost);
-    for action in &actions {
+    println!("\nPatrol Mission Plan found with cost {}", plan.cost);
+    for action in &plan.actions {
         println!("- {}", action.name);
     }
 

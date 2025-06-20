@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - empty plot with basic resources
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .int("metal", 0) // Basic building material
         .int("energy", 0) // Power resource
         .int("components", 0) // Crafted from metal
@@ -125,19 +125,19 @@ fn main() {
     // Find plan
     let plan_result = planner.plan(initial_state, &goal, &actions);
     assert!(
-        plan_result.is_some(),
+        plan_result.is_ok(),
         "Expected to find a valid plan for base building"
     );
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
-    println!("\nBase Building Plan found with cost {}", total_cost);
-    for action in &actions {
+    println!("\nBase Building Plan found with cost {}", plan.cost);
+    for action in &plan.actions {
         println!("- {} (cost: {})", action.name, action.cost);
     }
 
     // Verify the plan contains all necessary actions (in any order)
-    let action_names: Vec<_> = actions.iter().map(|a| a.name.as_str()).collect();
+    let action_names: Vec<_> = plan.actions.iter().map(|a| a.name.as_str()).collect();
 
     // Verify resource gathering chain
     assert!(
@@ -187,7 +187,7 @@ fn main() {
     let mut current_state = initial_state_copy;
 
     println!("\nSimulating plan execution:");
-    for action in &actions {
+    for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
         println!("After {}: ", action.name);
         if let Some(StateVar::I64(metal)) = current_state.get("metal") {

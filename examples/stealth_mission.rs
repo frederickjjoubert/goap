@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - starting conditions for the stealth mission
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .bool("player_detected", false)
         .int("guard_alert_level", 0)
         .bool("security_cameras_active", true)
@@ -97,19 +97,19 @@ fn main() {
     // Find plan
     let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
     assert!(
-        plan_result.is_some(),
+        plan_result.is_ok(),
         "Expected to find a valid plan for stealth mission"
     );
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
-    println!("\nStealth Mission Plan found with cost {}", total_cost);
-    for action in &actions {
+    println!("\nStealth Mission Plan found with cost {}", plan.cost);
+    for action in &plan.actions {
         println!("- {} (cost: {})", action.name, action.cost);
     }
 
     // Verify the plan contains necessary actions
-    let action_names: Vec<_> = actions.iter().map(|a| a.name.as_str()).collect();
+    let action_names: Vec<_> = plan.actions.iter().map(|a| a.name.as_str()).collect();
 
     // Verify preparation phase
     assert!(
@@ -139,7 +139,7 @@ fn main() {
     let mut current_state = initial_state.clone();
 
     println!("\nSimulating plan execution:");
-    for action in &actions {
+    for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
         println!("After {}: ", action.name);
         if let Some(StateVar::Bool(detected)) = current_state.get("player_detected") {
@@ -148,7 +148,7 @@ fn main() {
         if let Some(StateVar::I64(alert)) = current_state.get("guard_alert_level") {
             println!("  Guard Alert Level: {}", alert);
         }
-        if let Some(StateVar::Enum(location)) = current_state.get("current_location") {
+        if let Some(StateVar::String(location)) = current_state.get("current_location") {
             println!("  Current Location: {}", location);
         }
         if let Some(StateVar::Bool(accessible)) = current_state.get("target_location_accessible") {
@@ -169,7 +169,7 @@ fn main() {
     if let Some(StateVar::I64(alert)) = current_state.get("guard_alert_level") {
         assert!(*alert == 0, "Guard alert level should be 0");
     }
-    if let Some(StateVar::Enum(location)) = current_state.get("current_location") {
+    if let Some(StateVar::String(location)) = current_state.get("current_location") {
         assert!(location == "vault", "Should reach the vault");
     }
     if let Some(StateVar::Bool(accessible)) = current_state.get("target_location_accessible") {

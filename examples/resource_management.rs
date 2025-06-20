@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .int("wood_logs", 0)
         .int("planks", 0)
         .bool("has_saw", false)
@@ -65,25 +65,25 @@ fn main() {
     let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
 
     // Assert that a plan was found
-    assert!(plan_result.is_some(), "Expected to find a valid plan");
+    assert!(plan_result.is_ok(), "Expected to find a valid plan");
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
     println!("\nActual plan found:");
-    for action in &actions {
+    for action in &plan.actions {
         println!("- {} (cost: {})", action.name, action.cost);
         println!("  Preconditions: {:?}", action.preconditions);
         println!("  Effects: {:?}", action.effects);
     }
 
     // Verify the total cost is what we expect (1 + 1 + 1 + 2 + 2 = 7)
-    assert_eq!(total_cost, 7.0, "Expected total cost to be 7.0");
+    assert_eq!(plan.cost, 7.0, "Expected total cost to be 7.0");
 
     // Verify we have the right number of actions
-    assert_eq!(actions.len(), 5, "Expected 5 actions in the plan");
+    assert_eq!(plan.actions.len(), 5, "Expected 5 actions in the plan");
 
     // Verify the plan contains all the required actions (in any order)
-    let action_names: Vec<_> = actions.iter().map(|a| a.name.as_str()).collect();
+    let action_names: Vec<_> = plan.actions.iter().map(|a| a.name.as_str()).collect();
     assert!(
         action_names.contains(&"goto_store"),
         "Plan should include goto_store"
@@ -106,8 +106,8 @@ fn main() {
     );
 
     // Optional: Print the plan for debugging
-    println!("\nResource management plan found with cost {}", total_cost);
-    for action in actions {
+    println!("\nResource management plan found with cost {}", plan.cost);
+    for action in plan.actions {
         println!("- {}", action.name);
     }
 }

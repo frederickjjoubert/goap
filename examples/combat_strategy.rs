@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - player is not ready for combat
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .int("health", 30) // Low health (30/100)
         .int("armor", 0) // No armor
         .int("ammo", 5) // Low ammo
@@ -89,15 +89,15 @@ fn main() {
     // Find plan
     let plan_result = planner.plan(initial_state, &goal, &actions);
     assert!(
-        plan_result.is_some(),
+        plan_result.is_ok(),
         "Expected to find a valid plan for combat preparation"
     );
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
-    println!("\nCombat Strategy Plan found with cost {}", total_cost);
+    println!("\nCombat Strategy Plan found with cost {}", plan.cost);
     println!("Starting with 100 credits");
-    for action in &actions {
+    for action in &plan.actions {
         println!("- {} (cost: {})", action.name, action.cost);
     }
 
@@ -108,7 +108,7 @@ fn main() {
     );
 
     // Verify the plan contains all necessary actions (in any order)
-    let action_names: Vec<_> = actions.iter().map(|a| a.name.as_str()).collect();
+    let action_names: Vec<_> = plan.actions.iter().map(|a| a.name.as_str()).collect();
 
     // Verify healing sequence
     assert!(
@@ -142,7 +142,7 @@ fn main() {
 
     // Verify total cost is within expected range (should be sum of all action costs)
     assert!(
-        total_cost >= 7.5,
+        plan.cost >= 7.5,
         "Total cost should be at least 7.5 (movement + purchases)"
     );
 
@@ -150,7 +150,7 @@ fn main() {
     let mut current_state = initial_state_copy.clone();
     let mut total_credits = 100;
 
-    for action in &actions {
+    for action in &plan.actions {
         // Apply action effects
         current_state = action.apply_effect(&current_state);
 

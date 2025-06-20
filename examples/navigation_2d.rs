@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - robot starts at position (0,0)
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .int("x", 0)
         .int("y", 0)
         .int("battery", 300)
@@ -80,11 +80,11 @@ fn main() {
 
     // Find plan
     let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
-    assert!(plan_result.is_some(), "Expected to find a valid plan");
+    assert!(plan_result.is_ok(), "Expected to find a valid plan");
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
-    println!("\nNavigation Plan found with cost {}", total_cost);
+    println!("\nNavigation Plan found with cost {}", plan.cost);
 
     // Simulate plan execution
     let mut current_state = initial_state;
@@ -103,7 +103,7 @@ fn main() {
         }
     );
 
-    for action in &actions {
+    for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
 
         if let (Some(StateVar::I64(x)), Some(StateVar::I64(y))) =

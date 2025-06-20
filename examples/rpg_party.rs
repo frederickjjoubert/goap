@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - current party members and their attributes
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         // Party composition
         .bool("tank_available", true)
         .bool("healer_available", false)
@@ -125,19 +125,19 @@ fn main() {
     // Find plan
     let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
     assert!(
-        plan_result.is_some(),
+        plan_result.is_ok(),
         "Expected to find a valid plan for party management"
     );
 
-    let (actions, total_cost) = plan_result.unwrap();
+    let plan = plan_result.unwrap();
 
-    println!("\nParty Management Plan found with cost {}", total_cost);
-    for action in &actions {
+    println!("\nParty Management Plan found with cost {}", plan.cost);
+    for action in &plan.actions {
         println!("- {} (cost: {})", action.name, action.cost);
     }
 
     // Verify the plan contains necessary actions
-    let action_names: Vec<_> = actions.iter().map(|a| a.name.as_str()).collect();
+    let action_names: Vec<_> = plan.actions.iter().map(|a| a.name.as_str()).collect();
 
     // Verify party composition
     assert!(
@@ -182,7 +182,7 @@ fn main() {
     let remaining_gold = 400;
 
     println!("\nSimulating plan execution:");
-    for action in &actions {
+    for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
         println!("After {}: ", action.name);
         println!("  Gold: {}", remaining_gold);

@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Create initial state
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .bool("has_wood", false)
         .bool("has_axe", true)
         .bool("at_tree", false)
@@ -34,19 +34,19 @@ fn main() {
 
     // Find plan
     let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
-    assert!(plan_result.is_some(), "Expected to find a valid plan");
+    assert!(plan_result.is_ok(), "Expected to find a valid plan");
 
-    let (actions, total_cost) = plan_result.unwrap();
-    assert_eq!(total_cost, 3.0, "Expected total cost to be 3.0");
+    let plan = plan_result.unwrap();
+    assert_eq!(plan.cost, 3.0, "Expected total cost to be 3.0");
 
     let expected_actions = vec!["move_to_tree", "chop_tree"];
     assert_eq!(
-        actions.len(),
+        plan.actions.len(),
         expected_actions.len(),
         "Plan length doesn't match expected length"
     );
 
-    for (action, expected_name) in actions.iter().zip(expected_actions.iter()) {
+    for (action, expected_name) in plan.actions.iter().zip(expected_actions.iter()) {
         assert_eq!(
             action.name, *expected_name,
             "Expected action {} but got {}",
@@ -54,8 +54,8 @@ fn main() {
         );
     }
 
-    println!("Found plan with cost {}", total_cost);
-    for action in actions {
+    println!("Found plan with cost {}", plan.cost);
+    for action in plan.actions {
         println!("- {}", action.name);
     }
 }

@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state: Room is 22.5°C, heater and cooler are off
-    let initial_state = WorldState::builder()
+    let initial_state = State::builder()
         .float("temperature", 22.5)
         .bool("heater_on", false)
         .bool("cooler_on", false)
@@ -62,15 +62,15 @@ fn main() {
     println!("Goal state: {:?}", goal);
 
     match planner.plan(initial_state.clone(), &goal, &actions) {
-        Some((actions, cost)) => {
+        Ok(plan) => {
             println!(
                 "\nFound plan with {} actions and cost {:.2}:",
-                actions.len(),
-                cost
+                plan.actions.len(),
+                plan.cost
             );
             let mut current_state = initial_state;
 
-            for (i, action) in actions.iter().enumerate() {
+            for (i, action) in plan.actions.iter().enumerate() {
                 println!("\nStep {}: {}", i + 1, action.name);
                 current_state = action.apply_effect(&current_state);
 
@@ -85,6 +85,6 @@ fn main() {
                 }
             }
         }
-        None => println!("No plan found!"),
+        Err(e) => println!("No plan found! {}", e),
     }
 }
