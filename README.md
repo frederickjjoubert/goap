@@ -1,6 +1,6 @@
 # Goal Oriented Action Planning (GOAP)
 
-A general purpose Goal Oriented Action Planning (GOAP) framework written in Rust.
+A general purpose Goal Oriented Action Planning (GOAP) library written in Rust.
 
 - Goals are a desired state of the world that an agent wants to achieve.
 - Actions are the atomic operations that can be performed in the world, requiring preconditions and having effects.
