@@ -55,7 +55,7 @@ fn main() {
     let plan = plan_result.unwrap();
     assert_eq!(plan.cost, 5.0, "Expected total cost to be 5.0");
 
-    let expected_actions = vec!["goto_store", "buy_axe", "goto_tree", "chop_tree"];
+    let expected_actions = ["goto_store", "buy_axe", "goto_tree", "chop_tree"];
     assert_eq!(
         plan.actions.len(),
         expected_actions.len(),

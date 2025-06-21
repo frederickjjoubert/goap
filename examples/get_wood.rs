@@ -39,7 +39,7 @@ fn main() {
     let plan = plan_result.unwrap();
     assert_eq!(plan.cost, 3.0, "Expected total cost to be 3.0");
 
-    let expected_actions = vec!["move_to_tree", "chop_tree"];
+    let expected_actions = ["move_to_tree", "chop_tree"];
     assert_eq!(
         plan.actions.len(),
         expected_actions.len(),

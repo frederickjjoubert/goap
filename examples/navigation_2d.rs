@@ -34,7 +34,7 @@ fn main() {
     }
 
     // Add navigation waypoints
-    let waypoints = vec![
+    let waypoints = [
         (0, 0), // Start
         (3, 2), // Waypoint 1
         (5, 2), // Package pickup
