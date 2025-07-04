@@ -17,7 +17,7 @@ impl fmt::Display for Action {
         if !self.preconditions.vars.is_empty() {
             write!(f, "\n  Preconditions:")?;
             for (key, value) in &self.preconditions.vars {
-                write!(f, "\n    - {}: {}", key, value)?;
+                write!(f, "\n    - {key}: {value}")?;
             }
         }
 
@@ -25,10 +25,10 @@ impl fmt::Display for Action {
             write!(f, "\n  Effects:")?;
             for (key, operation) in &self.effects {
                 match operation {
-                    StateOperation::Set(value) => write!(f, "\n    - Set {} to {}", key, value)?,
-                    StateOperation::Add(value) => write!(f, "\n    - Add {} to {}", value, key)?,
+                    StateOperation::Set(value) => write!(f, "\n    - Set {key} to {value}")?,
+                    StateOperation::Add(value) => write!(f, "\n    - Add {value} to {key}")?,
                     StateOperation::Subtract(value) => {
-                        write!(f, "\n    - Subtract {} from {}", value, key)?
+                        write!(f, "\n    - Subtract {value} from {key}")?;
                     }
                 }
             }

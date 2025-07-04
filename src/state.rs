@@ -12,9 +12,9 @@ pub enum StateError {
 impl fmt::Display for StateError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StateError::VarNotFound(var) => write!(f, "State variable '{}' not found", var),
+            StateError::VarNotFound(var) => write!(f, "State variable '{var}' not found"),
             StateError::InvalidVarType { var, expected } => {
-                write!(f, "State variable '{}' is not of type {}", var, expected)
+                write!(f, "State variable '{var}' is not of type {expected}")
             }
         }
     }
@@ -35,7 +35,7 @@ impl fmt::Display for State {
         } else {
             writeln!(f, "State:")?;
             for (key, value) in &self.vars {
-                writeln!(f, "  - {}: {}", key, value)?;
+                writeln!(f, "  - {key}: {value}")?;
             }
         }
         Ok(())
@@ -280,10 +280,10 @@ pub enum StateVar {
 impl fmt::Display for StateVar {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StateVar::Bool(b) => write!(f, "{}", b),
-            StateVar::I64(i) => write!(f, "{}", i),
+            StateVar::Bool(b) => write!(f, "{b}"),
+            StateVar::I64(i) => write!(f, "{i}"),
             StateVar::F64(fp) => write!(f, "{:.3}", *fp as f64 / 1000.0),
-            StateVar::String(s) => write!(f, "{}", s),
+            StateVar::String(s) => write!(f, "{s}"),
         }
     }
 }

@@ -18,7 +18,7 @@ impl fmt::Display for Goal {
         if !self.desired_state.vars.is_empty() {
             write!(f, " desired state:")?;
             for (key, value) in &self.desired_state.vars {
-                write!(f, "\n  - {}: {}", key, value)?;
+                write!(f, "\n  - {key}: {value}")?;
             }
         }
         Ok(())
