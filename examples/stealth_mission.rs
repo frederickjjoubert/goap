@@ -103,9 +103,16 @@ fn main() {
 
     let plan = plan_result.unwrap();
 
-    println!("\nStealth Mission Plan found with cost {}", plan.cost);
+    println!(
+        "\nStealth Mission Plan found with cost {cost}",
+        cost = plan.cost
+    );
     for action in &plan.actions {
-        println!("- {} (cost: {})", action.name, action.cost);
+        println!(
+            "- {name} (cost: {cost})",
+            name = action.name,
+            cost = action.cost
+        );
     }
 
     // Verify the plan contains necessary actions
@@ -141,18 +148,19 @@ fn main() {
     println!("\nSimulating plan execution:");
     for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
-        println!("After {}: ", action.name);
+        let name = &action.name;
+        println!("After {name}: ");
         if let Some(StateVar::Bool(detected)) = current_state.get("player_detected") {
-            println!("  Player Detected: {}", detected);
+            println!("  Player Detected: {detected}");
         }
         if let Some(StateVar::I64(alert)) = current_state.get("guard_alert_level") {
-            println!("  Guard Alert Level: {}", alert);
+            println!("  Guard Alert Level: {alert}");
         }
         if let Some(StateVar::String(location)) = current_state.get("current_location") {
-            println!("  Current Location: {}", location);
+            println!("  Current Location: {location}");
         }
         if let Some(StateVar::Bool(accessible)) = current_state.get("target_location_accessible") {
-            println!("  Target Location Accessible: {}", accessible);
+            println!("  Target Location Accessible: {accessible}");
         }
     }
 
@@ -177,17 +185,12 @@ fn main() {
     }
 
     println!("\nFinal mission state verification:");
-    println!("Location: {:?}", current_state.get("current_location"));
-    println!(
-        "Target Accessible: {:?}",
-        current_state.get("target_location_accessible")
-    );
-    println!(
-        "Player Detected: {:?}",
-        current_state.get("player_detected")
-    );
-    println!(
-        "Guard Alert Level: {:?}",
-        current_state.get("guard_alert_level")
-    );
+    let location = current_state.get("current_location");
+    println!("Location: {location:?}");
+    let target_accessible = current_state.get("target_location_accessible");
+    println!("Target Accessible: {target_accessible:?}");
+    let player_detected = current_state.get("player_detected");
+    println!("Player Detected: {player_detected:?}");
+    let guard_alert_level = current_state.get("guard_alert_level");
+    println!("Guard Alert Level: {guard_alert_level:?}");
 }

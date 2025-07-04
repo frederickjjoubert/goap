@@ -48,14 +48,17 @@ fn main() {
 
     for (action, expected_name) in plan.actions.iter().zip(expected_actions.iter()) {
         assert_eq!(
-            action.name, *expected_name,
-            "Expected action {} but got {}",
-            expected_name, action.name
+            action.name,
+            *expected_name,
+            "Expected action {expected} but got {actual}",
+            expected = expected_name,
+            actual = action.name
         );
     }
 
-    println!("Found plan with cost {}", plan.cost);
+    println!("Found plan with cost {cost}", cost = plan.cost);
     for action in plan.actions {
-        println!("- {}", action.name);
+        let name = &action.name;
+        println!("- {name}");
     }
 }

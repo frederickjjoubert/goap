@@ -58,33 +58,33 @@ fn main() {
 
     // Find plan
     println!("Planning to adjust room temperature...");
-    println!("Initial state: {:?}", initial_state);
-    println!("Goal state: {:?}", goal);
+    println!("Initial state: {initial_state:?}");
+    println!("Goal state: {goal:?}");
 
     match planner.plan(initial_state.clone(), &goal, &actions) {
         Ok(plan) => {
-            println!(
-                "\nFound plan with {} actions and cost {:.2}:",
-                plan.actions.len(),
-                plan.cost
-            );
+            let action_count = plan.actions.len();
+            let cost = plan.cost;
+            println!("\nFound plan with {action_count} actions and cost {cost:.2}:");
             let mut current_state = initial_state;
 
             for (i, action) in plan.actions.iter().enumerate() {
-                println!("\nStep {}: {}", i + 1, action.name);
+                let step = i + 1;
+                let name = &action.name;
+                println!("\nStep {step}: {name}");
                 current_state = action.apply_effect(&current_state);
 
                 if let Some(temp) = current_state.get("temperature").and_then(|v| v.as_f64()) {
-                    println!("Temperature: {:.1}°C", temp);
+                    println!("Temperature: {temp:.1}°C");
                 }
                 if let Some(power) = current_state
                     .get("power_available")
                     .and_then(|v| v.as_f64())
                 {
-                    println!("Power available: {:.1}%", power);
+                    println!("Power available: {power:.1}%");
                 }
             }
         }
-        Err(e) => println!("No plan found! {}", e),
+        Err(e) => println!("No plan found! {e}"),
     }
 }

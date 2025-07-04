@@ -194,28 +194,28 @@ fn main() {
 
     match planner.plan(initial_state.clone(), &goal, &actions) {
         Ok(plan) => {
-            println!(
-                "\nFound trading plan with {} actions and cost {:.2}:",
-                plan.actions.len(),
-                plan.cost
-            );
+            let action_count = plan.actions.len();
+            let cost = plan.cost;
+            println!("\nFound trading plan with {action_count} actions and cost {cost:.2}:");
             let mut current_state = initial_state;
 
             for (i, action) in plan.actions.iter().enumerate() {
-                println!("\nStep {}: {}", i + 1, action.name);
+                let step = i + 1;
+                let name = &action.name;
+                println!("\nStep {step}: {name}");
                 current_state = action.apply_effect(&current_state);
 
                 if let Some(StateVar::I64(gold)) = current_state.get("gold") {
-                    println!("Gold: {}", gold);
+                    println!("Gold: {gold}");
                 }
                 if let Some(StateVar::I64(profit)) = current_state.get("total_profit") {
-                    println!("Profit: {}", profit);
+                    println!("Profit: {profit}");
                 }
                 if let Some(StateVar::I64(reputation)) = current_state.get("reputation") {
-                    println!("Reputation: {}", reputation);
+                    println!("Reputation: {reputation}");
                 }
                 if let Some(StateVar::I64(routes)) = current_state.get("trade_routes") {
-                    println!("Trade Routes: {}", routes);
+                    println!("Trade Routes: {routes}");
                 }
 
                 if let Some(StateVar::Bool(guild)) = current_state.get("has_guild_membership") {
@@ -235,6 +235,6 @@ fn main() {
                 }
             }
         }
-        Err(e) => println!("No plan found! {}", e),
+        Err(e) => println!("No plan found! {e}"),
     }
 }

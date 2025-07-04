@@ -131,9 +131,16 @@ fn main() {
 
     let plan = plan_result.unwrap();
 
-    println!("\nBase Building Plan found with cost {}", plan.cost);
+    println!(
+        "\nBase Building Plan found with cost {cost}",
+        cost = plan.cost
+    );
     for action in &plan.actions {
-        println!("- {} (cost: {})", action.name, action.cost);
+        println!(
+            "- {name} (cost: {cost})",
+            name = action.name,
+            cost = action.cost
+        );
     }
 
     // Verify the plan contains all necessary actions (in any order)
@@ -189,18 +196,18 @@ fn main() {
     println!("\nSimulating plan execution:");
     for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
-        println!("After {}: ", action.name);
+        println!("After {name}: ", name = action.name);
         if let Some(StateVar::I64(metal)) = current_state.get("metal") {
-            println!("  Metal: {}", metal);
+            println!("  Metal: {metal}");
         }
         if let Some(StateVar::I64(energy)) = current_state.get("energy") {
-            println!("  Energy: {}", energy);
+            println!("  Energy: {energy}");
         }
         if let Some(StateVar::I64(components)) = current_state.get("components") {
-            println!("  Components: {}", components);
+            println!("  Components: {components}");
         }
         if let Some(StateVar::I64(defense)) = current_state.get("defense_rating") {
-            println!("  Defense Rating: {}", defense);
+            println!("  Defense Rating: {defense}");
         }
     }
 
@@ -228,9 +235,14 @@ fn main() {
     }
 
     println!("\nFinal base state verification:");
-    println!("Energy Production: {:?}", current_state.get("energy"));
-    println!("Battery Charge: {:?}", current_state.get("battery_charge"));
-    println!("Defense Rating: {:?}", current_state.get("defense_rating"));
-    println!("Has Walls: {:?}", current_state.get("has_walls"));
-    println!("Has Turrets: {:?}", current_state.get("has_turrets"));
+    let energy_prod = current_state.get("energy");
+    println!("Energy Production: {energy_prod:?}");
+    let battery_charge = current_state.get("battery_charge");
+    println!("Battery Charge: {battery_charge:?}");
+    let defense_rating = current_state.get("defense_rating");
+    println!("Defense Rating: {defense_rating:?}");
+    let has_walls = current_state.get("has_walls");
+    println!("Has Walls: {has_walls:?}");
+    let has_turrets = current_state.get("has_turrets");
+    println!("Has Turrets: {has_turrets:?}");
 }

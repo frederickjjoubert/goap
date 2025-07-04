@@ -22,15 +22,21 @@ fn main() {
         let distance = ((to.0 - from.0).pow(2) + (to.1 - from.1).pow(2)) as f64;
         let battery_cost = (distance * 5.0) as i64; // Battery cost based on distance
 
-        Action::builder(&format!("goto_{}_{}_{}_{}", from.0, from.1, to.0, to.1))
-            .cost(distance)
-            .precondition("x", from.0)
-            .precondition("y", from.1)
-            .precondition("battery", battery_cost)
-            .effect_set_to("x", to.0)
-            .effect_set_to("y", to.1)
-            .effect_subtract_int("battery", battery_cost)
-            .build()
+        Action::builder(&format!(
+            "goto_{}_{}_{to_x}_{to_y}",
+            from.0,
+            from.1,
+            to_x = to.0,
+            to_y = to.1
+        ))
+        .cost(distance)
+        .precondition("x", from.0)
+        .precondition("y", from.1)
+        .precondition("battery", battery_cost)
+        .effect_set_to("x", to.0)
+        .effect_set_to("y", to.1)
+        .effect_subtract_int("battery", battery_cost)
+        .build()
     }
 
     // Add navigation waypoints
@@ -84,24 +90,22 @@ fn main() {
 
     let plan = plan_result.unwrap();
 
-    println!("\nNavigation Plan found with cost {}", plan.cost);
+    println!("\nNavigation Plan found with cost {cost}", cost = plan.cost);
 
     // Simulate plan execution
     let mut current_state = initial_state;
     println!("\nSimulating plan execution:");
-    println!(
-        "Starting at ({}, {})",
-        if let Some(StateVar::I64(x)) = current_state.get("x") {
-            *x
-        } else {
-            0_i64
-        },
-        if let Some(StateVar::I64(y)) = current_state.get("y") {
-            *y
-        } else {
-            0_i64
-        }
-    );
+    let x = if let Some(StateVar::I64(x)) = current_state.get("x") {
+        *x
+    } else {
+        0_i64
+    };
+    let y = if let Some(StateVar::I64(y)) = current_state.get("y") {
+        *y
+    } else {
+        0_i64
+    };
+    println!("Starting at ({x}, {y})");
 
     for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
@@ -109,7 +113,8 @@ fn main() {
         if let (Some(StateVar::I64(x)), Some(StateVar::I64(y))) =
             (current_state.get("x"), current_state.get("y"))
         {
-            println!("- {} -> Position: ({}, {})", action.name, x, y);
+            let name = &action.name;
+            println!("- {name} -> Position: ({x}, {y})");
         }
 
         if action.name == "pickup_package" {
@@ -119,7 +124,7 @@ fn main() {
         }
 
         if let Some(StateVar::I64(battery)) = current_state.get("battery") {
-            println!("  Battery: {}", battery);
+            println!("  Battery: {battery}");
         }
     }
 

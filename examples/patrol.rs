@@ -116,9 +116,13 @@ fn main() {
 
     let plan = plan_result.unwrap();
 
-    println!("\nPatrol Mission Plan found with cost {}", plan.cost);
+    println!(
+        "\nPatrol Mission Plan found with cost {cost}",
+        cost = plan.cost
+    );
     for action in &plan.actions {
-        println!("- {}", action.name);
+        let name = &action.name;
+        println!("- {name}");
     }
 
     // Verify the plan contains necessary actions
@@ -166,21 +170,22 @@ fn main() {
     println!("\nSimulating plan execution:");
     for action in &actions {
         current_state = action.apply_effect(&current_state);
-        println!("After {}: ", action.name);
+        let name = &action.name;
+        println!("After {name}: ");
         if let Some(StateVar::Bool(at_base)) = current_state.get("at_base") {
-            println!("  At Base: {}", at_base);
+            println!("  At Base: {at_base}");
         }
         if let Some(StateVar::Bool(has_radio)) = current_state.get("has_radio") {
-            println!("  Has Radio: {}", has_radio);
+            println!("  Has Radio: {has_radio}");
         }
         if let Some(StateVar::Bool(reported_a)) = current_state.get("reported_at_a") {
-            println!("  Reported at A: {}", reported_a);
+            println!("  Reported at A: {reported_a}");
         }
         if let Some(StateVar::Bool(reported_b)) = current_state.get("reported_at_b") {
-            println!("  Reported at B: {}", reported_b);
+            println!("  Reported at B: {reported_b}");
         }
         if let Some(StateVar::Bool(reported_c)) = current_state.get("reported_at_c") {
-            println!("  Reported at C: {}", reported_c);
+            println!("  Reported at C: {reported_c}");
         }
     }
 
@@ -208,9 +213,14 @@ fn main() {
     }
 
     println!("\nFinal patrol state verification:");
-    println!("At Base: {:?}", current_state.get("at_base"));
-    println!("Has Radio: {:?}", current_state.get("has_radio"));
-    println!("Reported at A: {:?}", current_state.get("reported_at_a"));
-    println!("Reported at B: {:?}", current_state.get("reported_at_b"));
-    println!("Reported at C: {:?}", current_state.get("reported_at_c"));
+    let at_base = current_state.get("at_base");
+    println!("At Base: {at_base:?}");
+    let has_radio = current_state.get("has_radio");
+    println!("Has Radio: {has_radio:?}");
+    let reported_at_a = current_state.get("reported_at_a");
+    println!("Reported at A: {reported_at_a:?}");
+    let reported_at_b = current_state.get("reported_at_b");
+    println!("Reported at B: {reported_at_b:?}");
+    let reported_at_c = current_state.get("reported_at_c");
+    println!("Reported at C: {reported_at_c:?}");
 }

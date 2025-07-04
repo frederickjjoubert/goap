@@ -71,9 +71,15 @@ fn main() {
 
     println!("\nActual plan found:");
     for action in &plan.actions {
-        println!("- {} (cost: {})", action.name, action.cost);
-        println!("  Preconditions: {:?}", action.preconditions);
-        println!("  Effects: {:?}", action.effects);
+        println!(
+            "- {name} (cost: {cost})",
+            name = action.name,
+            cost = action.cost
+        );
+        let preconditions = &action.preconditions;
+        println!("  Preconditions: {preconditions:?}");
+        let effects = &action.effects;
+        println!("  Effects: {effects:?}");
     }
 
     // Verify the total cost is what we expect (1 + 1 + 1 + 2 + 2 = 7)
@@ -106,8 +112,12 @@ fn main() {
     );
 
     // Optional: Print the plan for debugging
-    println!("\nResource management plan found with cost {}", plan.cost);
+    println!(
+        "\nResource management plan found with cost {cost}",
+        cost = plan.cost
+    );
     for action in plan.actions {
-        println!("- {}", action.name);
+        let name = &action.name;
+        println!("- {name}");
     }
 }

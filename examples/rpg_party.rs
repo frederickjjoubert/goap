@@ -131,9 +131,16 @@ fn main() {
 
     let plan = plan_result.unwrap();
 
-    println!("\nParty Management Plan found with cost {}", plan.cost);
+    println!(
+        "\nParty Management Plan found with cost {cost}",
+        cost = plan.cost
+    );
     for action in &plan.actions {
-        println!("- {} (cost: {})", action.name, action.cost);
+        println!(
+            "- {name} (cost: {cost})",
+            name = action.name,
+            cost = action.cost
+        );
     }
 
     // Verify the plan contains necessary actions
@@ -184,19 +191,20 @@ fn main() {
     println!("\nSimulating plan execution:");
     for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
-        println!("After {}: ", action.name);
-        println!("  Gold: {}", remaining_gold);
+        let name = &action.name;
+        println!("After {name}: ");
+        println!("  Gold: {remaining_gold}");
         if let Some(StateVar::I64(party_size)) = current_state.get("party_size") {
-            println!("  Party Size: {}", party_size);
+            println!("  Party Size: {party_size}");
         }
         if let Some(StateVar::I64(tank_health)) = current_state.get("tank_health") {
-            println!("  Tank Health: {}", tank_health);
+            println!("  Tank Health: {tank_health}");
         }
         if let Some(StateVar::I64(tank_armor)) = current_state.get("tank_armor") {
-            println!("  Tank Armor: {}", tank_armor);
+            println!("  Tank Armor: {tank_armor}");
         }
         if let Some(StateVar::I64(dps_damage)) = current_state.get("dps_damage") {
-            println!("  DPS Damage: {}", dps_damage);
+            println!("  DPS Damage: {dps_damage}");
         }
     }
 
@@ -223,15 +231,19 @@ fn main() {
     }
 
     println!("\nFinal party state verification:");
-    println!("Party Size: {:?}", current_state.get("party_size"));
-    println!("Tank Health: {:?}", current_state.get("tank_health"));
-    println!("Tank Armor: {:?}", current_state.get("tank_armor"));
-    println!("Tank Poisoned: {:?}", current_state.get("tank_poisoned"));
-    println!("DPS Damage: {:?}", current_state.get("dps_damage"));
-    println!("DPS Cursed: {:?}", current_state.get("dps_cursed"));
-    println!(
-        "Healer Available: {:?}",
-        current_state.get("healer_available")
-    );
-    println!("Remaining Gold: {}", remaining_gold);
+    let party_size = current_state.get("party_size");
+    println!("Party Size: {party_size:?}");
+    let tank_health = current_state.get("tank_health");
+    println!("Tank Health: {tank_health:?}");
+    let tank_armor = current_state.get("tank_armor");
+    println!("Tank Armor: {tank_armor:?}");
+    let tank_poisoned = current_state.get("tank_poisoned");
+    println!("Tank Poisoned: {tank_poisoned:?}");
+    let dps_damage = current_state.get("dps_damage");
+    println!("DPS Damage: {dps_damage:?}");
+    let dps_cursed = current_state.get("dps_cursed");
+    println!("DPS Cursed: {dps_cursed:?}");
+    let healer_available = current_state.get("healer_available");
+    println!("Healer Available: {healer_available:?}");
+    println!("Remaining Gold: {remaining_gold}");
 }

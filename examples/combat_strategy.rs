@@ -95,10 +95,17 @@ fn main() {
 
     let plan = plan_result.unwrap();
 
-    println!("\nCombat Strategy Plan found with cost {}", plan.cost);
+    println!(
+        "\nCombat Strategy Plan found with cost {cost}",
+        cost = plan.cost
+    );
     println!("Starting with 100 credits");
     for action in &plan.actions {
-        println!("- {} (cost: {})", action.name, action.cost);
+        println!(
+            "- {name} (cost: {cost})",
+            name = action.name,
+            cost = action.cost
+        );
     }
 
     // Verify we have the right number of actions (should include movement and purchases)
@@ -173,14 +180,14 @@ fn main() {
     );
 
     println!("\nFinal state verification:");
-    println!("Remaining credits: {}", total_credits);
+    println!("Remaining credits: {total_credits}");
     if let Some(StateVar::I64(health)) = current_state.get("health") {
-        println!("Final health: {}", health);
+        println!("Final health: {health}");
     }
     if let Some(StateVar::I64(armor)) = current_state.get("armor") {
-        println!("Final armor: {}", armor);
+        println!("Final armor: {armor}");
     }
     if let Some(StateVar::I64(ammo)) = current_state.get("ammo") {
-        println!("Final ammo: {}", ammo);
+        println!("Final ammo: {ammo}");
     }
 }
