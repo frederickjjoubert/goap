@@ -4,14 +4,14 @@ mod tests {
     use std::collections::HashMap;
 
     fn create_test_state() -> State {
-        let mut state = State::new();
+        let mut state = State::empty();
         state.set("has_wood", StateVar::from_f64(1.0));
         state.set("has_tools", StateVar::from_f64(1.0));
         state
     }
 
     fn create_test_action() -> Action {
-        let mut preconditions = State::new();
+        let mut preconditions = State::empty();
         preconditions.set("has_wood", StateVar::from_f64(1.0));
         preconditions.set("has_tools", StateVar::from_f64(1.0));
 
@@ -19,7 +19,7 @@ mod tests {
         effects.insert("has_planks".to_string(), StateOperation::set_f64(1.0));
         effects.insert("has_wood".to_string(), StateOperation::set_f64(0.0));
 
-        Action::new("make_planks", 2.0, preconditions, effects)
+        Action::from_parts("make_planks", 2.0, preconditions, effects)
     }
 
     #[test]
@@ -48,7 +48,7 @@ mod tests {
         let valid_state = create_test_state();
         assert!(action.can_execute(&valid_state));
 
-        let mut invalid_state = State::new();
+        let mut invalid_state = State::empty();
         invalid_state.set("has_tools", StateVar::from_f64(1.0));
         assert!(!action.can_execute(&invalid_state));
     }
@@ -66,12 +66,12 @@ mod tests {
 
     #[test]
     fn test_action_builder() {
-        let action = Action::builder("test_action")
+        let action = Action::new("test_action")
             .cost(2.5)
-            .precondition("has_wood", true)
-            .precondition("energy", 10)
-            .effect_set_to("has_planks", true)
-            .effect_subtract_float("energy", 5.0)
+            .has("has_wood", true)
+            .has("energy", 10)
+            .sets("has_planks", true)
+            .subtracts("energy", 5.0)
             .build();
 
         assert_eq!(action.name, "test_action");
@@ -98,24 +98,20 @@ mod tests {
 
     #[test]
     fn test_action_builder_with_numeric_operations() {
-        let action = Action::builder("complex_action")
+        let action = Action::new("complex_action")
             .cost(10.0)
-            // Boolean preconditions and effects
-            .precondition("has_wood", true)
-            .effect_set_to("has_planks", true)
-            // Integer operations
-            .precondition("gold", 100)
-            .effect_set_to("gold", 200) // Set to 200
-            .effect_add_int("gold_add", 50) // Add 50
-            .effect_subtract_int("items", 1) // Subtract 1
-            // Float operations
-            .precondition("health", 100.0)
-            .effect_set_to("health", 150.0) // Set to 150.0
-            .effect_add_float("speed", 1.5) // Add 1.5
-            .effect_subtract_float("energy", 10.5) // Subtract 10.5
-            // Enum operations
-            .precondition("location", "forest")
-            .effect_set_to("location", "town")
+            .has("has_wood", true)
+            .sets("has_planks", true)
+            .has("gold", 100)
+            .sets("gold", 200)
+            .adds("gold_add", 50)
+            .subtracts("items", 1)
+            .has("health", 100.0)
+            .sets("health", 150.0)
+            .adds("speed", 1.5)
+            .subtracts("energy", 10.5)
+            .has("location", "forest")
+            .sets("location", "town")
             .build();
 
         // Test cost
@@ -180,6 +176,48 @@ mod tests {
             assert_eq!(*value, StateVar::String("town".to_string()));
         } else {
             panic!("Expected Set operation for location");
+        }
+    }
+
+    #[test]
+    fn test_new_unified_api() {
+        let action = Action::new("unified_test")
+            .cost(3.0)
+            .has("has_wood", true)
+            .has("energy", 100)
+            .sets("has_planks", true)
+            .subtracts("energy", 20)
+            .subtracts("stamina", 5.5)
+            .build();
+
+        assert_eq!(action.name, "unified_test");
+        assert_eq!(action.cost, 3.0);
+        assert_eq!(
+            action.preconditions.get("has_wood"),
+            Some(&StateVar::Bool(true))
+        );
+        assert_eq!(
+            action.preconditions.get("energy"),
+            Some(&StateVar::I64(100))
+        );
+
+        // Check effects use the new shorter method names
+        if let StateOperation::Set(value) = action.effects.get("has_planks").unwrap() {
+            assert_eq!(value, &StateVar::Bool(true));
+        } else {
+            panic!("Expected Set operation");
+        }
+
+        if let StateOperation::Subtract(value) = action.effects.get("energy").unwrap() {
+            assert_eq!(*value, 20);
+        } else {
+            panic!("Expected Subtract operation");
+        }
+
+        if let StateOperation::Subtract(value) = action.effects.get("stamina").unwrap() {
+            assert_eq!(*value, 5500); // 5.5 converted to fixed point
+        } else {
+            panic!("Expected Subtract operation");
         }
     }
 }

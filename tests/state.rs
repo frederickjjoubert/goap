@@ -36,7 +36,7 @@ mod tests {
 
     #[test]
     fn test_world_state_basic_operations() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test set and get
         state.set("bool_var", StateVar::Bool(true));
@@ -54,13 +54,13 @@ mod tests {
 
     #[test]
     fn test_world_state_satisfies() {
-        let mut state = State::new();
+        let mut state = State::empty();
         state.set("bool_var", StateVar::Bool(true));
         state.set("int_var", StateVar::I64(42));
         state.set("enum_var", StateVar::String("test".to_string()));
 
         // Test exact matches
-        let mut conditions = State::new();
+        let mut conditions = State::empty();
         conditions.set("bool_var", StateVar::Bool(true));
         assert!(state.satisfies(&conditions));
 
@@ -72,14 +72,14 @@ mod tests {
         conditions.set("bool_var", StateVar::Bool(false));
         assert!(!state.satisfies(&conditions));
 
-        conditions = State::new();
+        conditions = State::new().build();
         conditions.set("nonexistent", StateVar::Bool(true));
         assert!(!state.satisfies(&conditions));
     }
 
     #[test]
     fn test_world_state_apply() {
-        let mut state = State::new();
+        let mut state = State::empty();
         state.set("bool_var", StateVar::Bool(false));
         state.set("int_var", StateVar::I64(10));
         state.set("enum_var", StateVar::String("old".to_string()));
@@ -113,11 +113,11 @@ mod tests {
 
     #[test]
     fn test_world_state_merge() {
-        let mut state1 = State::new();
+        let mut state1 = State::new().build();
         state1.set("var1", StateVar::Bool(true));
         state1.set("var2", StateVar::I64(10));
 
-        let mut state2 = State::new();
+        let mut state2 = State::new().build();
         state2.set("var2", StateVar::I64(20));
         state2.set("var3", StateVar::String("test".to_string()));
 
@@ -133,11 +133,11 @@ mod tests {
 
     #[test]
     fn test_world_state_hash() {
-        let mut state1 = State::new();
+        let mut state1 = State::new().build();
         state1.set("a", StateVar::Bool(true));
         state1.set("b", StateVar::I64(10));
 
-        let mut state2 = State::new();
+        let mut state2 = State::new().build();
         state2.set("b", StateVar::I64(10));
         state2.set("a", StateVar::Bool(true));
 
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_operations() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test setting and getting F64 values
         state.set("speed", StateVar::F64(1500)); // 1.5
@@ -190,7 +190,7 @@ mod tests {
 
         println!("\n=== Testing exact match ===");
         // Test exact match
-        conditions = State::new(); // Clear conditions
+        conditions = State::new().build(); // Clear conditions
         conditions.set("speed", StateVar::F64(1500));
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
@@ -198,7 +198,7 @@ mod tests {
 
         println!("\n=== Testing greater than satisfies ===");
         // Test greater than satisfies
-        conditions = State::new(); // Clear conditions
+        conditions = State::new().build(); // Clear conditions
         conditions.set("speed", StateVar::F64(1000)); // 1.0
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
@@ -206,7 +206,7 @@ mod tests {
 
         println!("\n=== Testing less than fails ===");
         // Test less than fails
-        conditions = State::new(); // Clear conditions
+        conditions = State::new().build(); // Clear conditions
         conditions.set("speed", StateVar::F64(2000)); // 2.0
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
@@ -215,13 +215,13 @@ mod tests {
         println!("\n=== Testing small decimal differences ===");
         // Test small decimal differences
         state.set("precise", StateVar::F64(1001)); // 1.001
-        conditions = State::new(); // Clear conditions
+        conditions = State::new().build(); // Clear conditions
         conditions.set("precise", StateVar::F64(1000)); // 1.000
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
-        conditions = State::new(); // Clear conditions
+        conditions = State::new().build(); // Clear conditions
         conditions.set("precise", StateVar::F64(1002)); // 1.002
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
@@ -230,11 +230,11 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_hash_consistency() {
-        let mut state1 = State::new();
+        let mut state1 = State::new().build();
         state1.set("a", StateVar::F64(1500)); // 1.5
         state1.set("b", StateVar::F64(2500)); // 2.5
 
-        let mut state2 = State::new();
+        let mut state2 = State::new().build();
         state2.set("b", StateVar::F64(2500)); // 2.5
         state2.set("a", StateVar::F64(1500)); // 1.5
 
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_arithmetic() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test addition
         state.set("value", StateVar::F64(1500)); // 1.5
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_edge_cases() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test zero values
         state.set("zero", StateVar::F64(0));
@@ -337,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_mixed_operations() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test mixed operations in sequence
         state.set("mixed", StateVar::F64(1500)); // 1.500
@@ -377,8 +377,8 @@ mod tests {
 
         println!("\n=== Testing zero satisfies zero ===");
         // Test zero satisfies zero
-        state = State::new(); // Clear state
-        conditions = State::new(); // Clear conditions
+        state = State::new().build(); // Clear state
+        conditions = State::new().build(); // Clear conditions
         state.set("zero", StateVar::F64(0));
         conditions.set("zero", StateVar::F64(0));
         println!("State: {state:?}");
@@ -387,8 +387,8 @@ mod tests {
 
         println!("\n=== Testing positive satisfies zero ===");
         // Test positive satisfies zero
-        state = State::new(); // Clear state
-        conditions = State::new(); // Clear conditions
+        state = State::new().build(); // Clear state
+        conditions = State::new().build(); // Clear conditions
         state.set("pos", StateVar::F64(1)); // 0.001
         conditions.set("pos", StateVar::F64(0));
         println!("State: {state:?}");
@@ -397,8 +397,8 @@ mod tests {
 
         println!("\n=== Testing negative doesn't satisfy zero ===");
         // Test negative doesn't satisfy zero
-        state = State::new(); // Clear state
-        conditions = State::new(); // Clear conditions
+        state = State::new().build(); // Clear state
+        conditions = State::new().build(); // Clear conditions
         state.set("neg", StateVar::F64(-1)); // -0.001
         conditions.set("neg", StateVar::F64(0));
         println!("State: {state:?}");
@@ -407,8 +407,8 @@ mod tests {
 
         println!("\n=== Testing exact decimal matches ===");
         // Test exact decimal matches
-        state = State::new(); // Clear state
-        conditions = State::new(); // Clear conditions
+        state = State::new().build(); // Clear state
+        conditions = State::new().build(); // Clear conditions
         state.set("exact", StateVar::F64(1234)); // 1.234
         conditions.set("exact", StateVar::F64(1234));
         println!("State: {state:?}");
@@ -417,8 +417,8 @@ mod tests {
 
         println!("\n=== Testing very close values ===");
         // Test very close values
-        state = State::new(); // Clear state
-        conditions = State::new(); // Clear conditions
+        state = State::new().build(); // Clear state
+        conditions = State::new().build(); // Clear conditions
         state.set("close", StateVar::F64(1000)); // 1.000
         conditions.set("close", StateVar::F64(999)); // 0.999
         println!("State: {state:?}");
@@ -427,8 +427,8 @@ mod tests {
 
         println!("\n=== Testing boundary conditions ===");
         // Test boundary conditions
-        state = State::new(); // Clear state
-        conditions = State::new(); // Clear conditions
+        state = State::new().build(); // Clear state
+        conditions = State::new().build(); // Clear conditions
         state.set("boundary", StateVar::F64(1000)); // 1.000
         conditions.set("boundary", StateVar::F64(1001)); // 1.001
         println!("State: {state:?}");
@@ -469,7 +469,7 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_operations_with_conversion() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test setting and getting F64 values using floating point
         state.set("speed", StateVar::from_f64(1.5));
@@ -482,21 +482,21 @@ mod tests {
         let mut conditions;
 
         println!("\n=== Testing exact match ===");
-        conditions = State::new();
+        conditions = State::new().build();
         conditions.set("speed", StateVar::from_f64(1.5));
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing greater than satisfies ===");
-        conditions = State::new();
+        conditions = State::new().build();
         conditions.set("speed", StateVar::from_f64(1.0));
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing less than fails ===");
-        conditions = State::new();
+        conditions = State::new().build();
         conditions.set("speed", StateVar::from_f64(2.0));
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
@@ -504,13 +504,13 @@ mod tests {
 
         println!("\n=== Testing small decimal differences ===");
         state.set("precise", StateVar::from_f64(1.001));
-        conditions = State::new();
+        conditions = State::new().build();
         conditions.set("precise", StateVar::from_f64(1.0));
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
-        conditions = State::new();
+        conditions = State::new().build();
         conditions.set("precise", StateVar::from_f64(1.002));
         println!("State: {state:?}");
         println!("Conditions: {conditions:?}");
@@ -519,7 +519,7 @@ mod tests {
 
     #[test]
     fn test_world_state_f64_arithmetic_with_helpers() {
-        let mut state = State::new();
+        let mut state = State::empty();
 
         // Test addition with helper
         state.set("value", StateVar::from_f64(1.5));
@@ -610,11 +610,11 @@ mod tests {
 
     #[test]
     fn test_world_state_builder() {
-        let state = State::builder()
-            .bool("has_wood", true)
-            .int("energy", 100)
-            .float("temperature", 22.5)
-            .enum_val("location", "forest")
+        let state = State::new()
+            .set("has_wood", true)
+            .set("energy", 100)
+            .set("temperature", 22.5)
+            .set("location", "forest")
             .build();
 
         // Test boolean value
@@ -638,16 +638,15 @@ mod tests {
 
     #[test]
     fn test_world_state_builder_chaining() {
-        // Test that we can chain multiple values of the same type
-        let state = State::builder()
-            .bool("has_wood", true)
-            .bool("has_tools", false)
-            .int("wood_count", 5)
-            .int("tool_count", 0)
-            .float("health", 100.0)
-            .float("energy", 50.0)
-            .enum_val("location", "forest")
-            .enum_val("weather", "sunny")
+        let state = State::new()
+            .set("has_wood", true)
+            .set("has_tools", false)
+            .set("wood_count", 5)
+            .set("tool_count", 0)
+            .set("health", 100.0)
+            .set("energy", 50.0)
+            .set("location", "forest")
+            .set("weather", "sunny")
             .build();
 
         assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
@@ -663,6 +662,24 @@ mod tests {
         assert_eq!(
             state.get("weather"),
             Some(&StateVar::String("sunny".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_new_unified_state_api() {
+        let state = State::new()
+            .set("has_wood", false)
+            .set("health", 100)
+            .set("energy", 50.0)
+            .set("location", "forest")
+            .build();
+
+        assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(false)));
+        assert_eq!(state.get("health"), Some(&StateVar::I64(100)));
+        assert_eq!(state.get("energy"), Some(&StateVar::F64(50000))); // 50.0 as fixed point
+        assert_eq!(
+            state.get("location"),
+            Some(&StateVar::String("forest".to_string()))
         );
     }
 }

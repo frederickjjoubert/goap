@@ -7,17 +7,15 @@ mod tests {
         let planner = Planner::new();
 
         // Initial state
-        let initial_state = State::builder().bool("has_wood", false).build();
+        let initial_state = State::new().set("has_wood", false).build();
 
         // Goal state
-        let goal = Goal::builder("get_wood")
-            .require_bool("has_wood", true)
-            .build();
+        let goal = Goal::new("get_wood").requires("has_wood", true).build();
 
         // Action to get wood
-        let action = Action::builder("get_wood")
+        let action = Action::new("get_wood")
             .cost(1.0)
-            .effect_set_to("has_wood", true)
+            .sets("has_wood", true)
             .build();
 
         let actions = vec![action];
@@ -37,17 +35,15 @@ mod tests {
         let planner = Planner::new();
 
         // Initial state
-        let initial_state = State::builder().bool("has_wood", false).build();
+        let initial_state = State::new().set("has_wood", false).build();
 
         // Goal state requiring something impossible
-        let goal = Goal::builder("get_gold")
-            .require_bool("has_gold", true)
-            .build();
+        let goal = Goal::new("get_gold").requires("has_gold", true).build();
 
         // Action that doesn't help achieve goal
-        let action = Action::builder("get_wood")
+        let action = Action::new("get_wood")
             .cost(1.0)
-            .effect_set_to("has_wood", true)
+            .sets("has_wood", true)
             .build();
 
         let actions = vec![action];
@@ -63,27 +59,25 @@ mod tests {
         let planner = Planner::new();
 
         // Initial state
-        let initial_state = State::builder()
-            .bool("has_wood", false)
-            .bool("has_planks", false)
+        let initial_state = State::new()
+            .set("has_wood", false)
+            .set("has_planks", false)
             .build();
 
         // Goal state
-        let goal = Goal::builder("get_planks")
-            .require_bool("has_planks", true)
-            .build();
+        let goal = Goal::new("get_planks").requires("has_planks", true).build();
 
         // Action to get wood
-        let get_wood = Action::builder("get_wood")
+        let get_wood = Action::new("get_wood")
             .cost(1.0)
-            .effect_set_to("has_wood", true)
+            .sets("has_wood", true)
             .build();
 
         // Action to craft planks
-        let craft_planks = Action::builder("craft_planks")
+        let craft_planks = Action::new("craft_planks")
             .cost(2.0)
-            .precondition("has_wood", true)
-            .effect_set_to("has_planks", true)
+            .has("has_wood", true)
+            .sets("has_planks", true)
             .build();
 
         let actions = vec![get_wood, craft_planks];
