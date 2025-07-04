@@ -58,10 +58,7 @@ mod tests {
 
         let initial_state = State::new().set("gold", 0).build();
         let goal = Goal::new("get_gold").requires("gold", 10).build();
-        let action = Action::new("mine_gold")
-            .cost(2.0)
-            .sets("gold", 15)
-            .build();
+        let action = Action::new("mine_gold").cost(2.0).sets("gold", 15).build();
 
         let result = planner.plan(initial_state, &goal, &[action]);
         assert!(result.is_ok());
@@ -342,15 +339,9 @@ mod tests {
             .sets("has_weapon", true)
             .build();
 
-        let earn_gold = Action::new("work")
-            .cost(2.0)
-            .sets("gold", 150)
-            .build();
+        let earn_gold = Action::new("work").cost(2.0).sets("gold", 150).build();
 
-        let heal = Action::new("rest")
-            .cost(1.0)
-            .sets("health", 100.0)
-            .build();
+        let heal = Action::new("rest").cost(1.0).sets("health", 100.0).build();
 
         let travel = Action::new("travel_to_town")
             .cost(1.0)
@@ -528,15 +519,9 @@ mod tests {
         let initial_state = State::new().set("gold", 0).build();
         let goal = Goal::new("get_rich").requires("gold", 100).build();
 
-        let small_job = Action::new("small_job")
-            .cost(1.0)
-            .adds("gold", 30)
-            .build();
+        let small_job = Action::new("small_job").cost(1.0).adds("gold", 30).build();
 
-        let big_job = Action::new("big_job")
-            .cost(3.0)
-            .adds("gold", 80)
-            .build();
+        let big_job = Action::new("big_job").cost(3.0).adds("gold", 80).build();
 
         let actions = vec![small_job, big_job];
         let result = planner.plan(initial_state, &goal, &actions);
@@ -561,14 +546,9 @@ mod tests {
             .set("furniture", 0)
             .build();
 
-        let goal = Goal::new("make_furniture")
-            .requires("furniture", 1)
-            .build();
+        let goal = Goal::new("make_furniture").requires("furniture", 1).build();
 
-        let chop_wood = Action::new("chop_wood")
-            .cost(1.0)
-            .adds("wood", 5)
-            .build();
+        let chop_wood = Action::new("chop_wood").cost(1.0).adds("wood", 5).build();
 
         let make_planks = Action::new("make_planks")
             .cost(1.0)

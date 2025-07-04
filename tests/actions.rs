@@ -23,7 +23,7 @@ mod tests {
     }
 
     // Tests for basic Action creation and properties
-    
+
     /// Test basic action creation using from_parts constructor
     /// Validates: Action name, cost, preconditions, and effects are properly stored
     /// Failure: Action constructor is broken or data not stored correctly
@@ -96,8 +96,14 @@ mod tests {
             .requires("door_locked", false)
             .build();
 
-        assert_eq!(action.preconditions.get("has_key"), Some(&StateVar::Bool(true)));
-        assert_eq!(action.preconditions.get("door_locked"), Some(&StateVar::Bool(false)));
+        assert_eq!(
+            action.preconditions.get("has_key"),
+            Some(&StateVar::Bool(true))
+        );
+        assert_eq!(
+            action.preconditions.get("door_locked"),
+            Some(&StateVar::Bool(false))
+        );
     }
 
     /// Test ActionBuilder with boolean effects using Set operation
@@ -220,8 +226,14 @@ mod tests {
             .requires("speed", 2.25)
             .build();
 
-        assert_eq!(action.preconditions.get("health"), Some(&StateVar::F64(75500)));
-        assert_eq!(action.preconditions.get("speed"), Some(&StateVar::F64(2250)));
+        assert_eq!(
+            action.preconditions.get("health"),
+            Some(&StateVar::F64(75500))
+        );
+        assert_eq!(
+            action.preconditions.get("speed"),
+            Some(&StateVar::F64(2250))
+        );
     }
 
     /// Test ActionBuilder with float Set effects
@@ -305,8 +317,14 @@ mod tests {
             .requires("state", "peaceful")
             .build();
 
-        assert_eq!(action.preconditions.get("location"), Some(&StateVar::String("town".to_string())));
-        assert_eq!(action.preconditions.get("state"), Some(&StateVar::String("peaceful".to_string())));
+        assert_eq!(
+            action.preconditions.get("location"),
+            Some(&StateVar::String("town".to_string()))
+        );
+        assert_eq!(
+            action.preconditions.get("state"),
+            Some(&StateVar::String("peaceful".to_string()))
+        );
     }
 
     /// Test ActionBuilder with string/enum Set effects
@@ -339,9 +357,7 @@ mod tests {
     /// Failure: Builder doesn't handle cost setting correctly
     #[test]
     fn test_builder_cost() {
-        let action = Action::new("expensive_action")
-            .cost(15.5)
-            .build();
+        let action = Action::new("expensive_action").cost(15.5).build();
 
         assert_eq!(action.cost, 15.5);
     }
@@ -369,10 +385,19 @@ mod tests {
             .requires("location", "castle")
             .build();
 
-        assert_eq!(action.preconditions.get("has_key"), Some(&StateVar::Bool(true)));
+        assert_eq!(
+            action.preconditions.get("has_key"),
+            Some(&StateVar::Bool(true))
+        );
         assert_eq!(action.preconditions.get("gold"), Some(&StateVar::I64(100)));
-        assert_eq!(action.preconditions.get("health"), Some(&StateVar::F64(75500)));
-        assert_eq!(action.preconditions.get("location"), Some(&StateVar::String("castle".to_string())));
+        assert_eq!(
+            action.preconditions.get("health"),
+            Some(&StateVar::F64(75500))
+        );
+        assert_eq!(
+            action.preconditions.get("location"),
+            Some(&StateVar::String("castle".to_string()))
+        );
     }
 
     /// Test ActionBuilder with mixed effect types

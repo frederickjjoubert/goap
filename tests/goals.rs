@@ -20,10 +20,13 @@ mod tests {
     fn test_goal_creation_from_state() {
         let state = State::new().set("has_item", true).build();
         let goal = Goal::from_state("test_goal", state, 5);
-        
+
         assert_eq!(goal.name, "test_goal");
         assert_eq!(goal.priority, 5);
-        assert_eq!(goal.desired_state.get("has_item"), Some(&StateVar::Bool(true)));
+        assert_eq!(
+            goal.desired_state.get("has_item"),
+            Some(&StateVar::Bool(true))
+        );
     }
 
     // Tests for GoalBuilder - Bool requirements
@@ -38,8 +41,14 @@ mod tests {
             .requires("door_locked", false)
             .build();
 
-        assert_eq!(goal.desired_state.get("has_key"), Some(&StateVar::Bool(true)));
-        assert_eq!(goal.desired_state.get("door_locked"), Some(&StateVar::Bool(false)));
+        assert_eq!(
+            goal.desired_state.get("has_key"),
+            Some(&StateVar::Bool(true))
+        );
+        assert_eq!(
+            goal.desired_state.get("door_locked"),
+            Some(&StateVar::Bool(false))
+        );
     }
 
     // Tests for GoalBuilder - I64 requirements
@@ -70,7 +79,10 @@ mod tests {
             .requires("speed", 2.25)
             .build();
 
-        assert_eq!(goal.desired_state.get("health"), Some(&StateVar::F64(75500)));
+        assert_eq!(
+            goal.desired_state.get("health"),
+            Some(&StateVar::F64(75500))
+        );
         assert_eq!(goal.desired_state.get("speed"), Some(&StateVar::F64(2250)));
     }
 
@@ -86,8 +98,14 @@ mod tests {
             .requires("weather", "sunny")
             .build();
 
-        assert_eq!(goal.desired_state.get("location"), Some(&StateVar::String("town".to_string())));
-        assert_eq!(goal.desired_state.get("weather"), Some(&StateVar::String("sunny".to_string())));
+        assert_eq!(
+            goal.desired_state.get("location"),
+            Some(&StateVar::String("town".to_string()))
+        );
+        assert_eq!(
+            goal.desired_state.get("weather"),
+            Some(&StateVar::String("sunny".to_string()))
+        );
     }
 
     // Tests for GoalBuilder - Priority functionality
@@ -97,9 +115,7 @@ mod tests {
     /// Failure: Builder doesn't handle priority setting correctly
     #[test]
     fn test_builder_priority() {
-        let goal = Goal::new("high_priority_goal")
-            .priority(10)
-            .build();
+        let goal = Goal::new("high_priority_goal").priority(10).build();
 
         assert_eq!(goal.priority, 10);
     }
@@ -128,10 +144,19 @@ mod tests {
             .priority(5)
             .build();
 
-        assert_eq!(goal.desired_state.get("has_key"), Some(&StateVar::Bool(true)));
+        assert_eq!(
+            goal.desired_state.get("has_key"),
+            Some(&StateVar::Bool(true))
+        );
         assert_eq!(goal.desired_state.get("gold"), Some(&StateVar::I64(100)));
-        assert_eq!(goal.desired_state.get("health"), Some(&StateVar::F64(75500)));
-        assert_eq!(goal.desired_state.get("location"), Some(&StateVar::String("castle".to_string())));
+        assert_eq!(
+            goal.desired_state.get("health"),
+            Some(&StateVar::F64(75500))
+        );
+        assert_eq!(
+            goal.desired_state.get("location"),
+            Some(&StateVar::String("castle".to_string()))
+        );
         assert_eq!(goal.priority, 5);
     }
 
@@ -142,9 +167,7 @@ mod tests {
     /// Failure: Boolean goal satisfaction logic is broken
     #[test]
     fn test_satisfaction_bool_exact_match() {
-        let goal = Goal::new("bool_goal")
-            .requires("has_key", true)
-            .build();
+        let goal = Goal::new("bool_goal").requires("has_key", true).build();
 
         let state = State::new().set("has_key", true).build();
         assert!(goal.is_satisfied(&state));
@@ -155,9 +178,7 @@ mod tests {
     /// Failure: Boolean goal satisfaction fails to detect mismatches
     #[test]
     fn test_satisfaction_bool_mismatch() {
-        let goal = Goal::new("bool_goal")
-            .requires("has_key", true)
-            .build();
+        let goal = Goal::new("bool_goal").requires("has_key", true).build();
 
         let state = State::new().set("has_key", false).build();
         assert!(!goal.is_satisfied(&state));
@@ -170,9 +191,7 @@ mod tests {
     /// Failure: Integer goal satisfaction logic is broken for exact matches
     #[test]
     fn test_satisfaction_i64_exact_match() {
-        let goal = Goal::new("resource_goal")
-            .requires("gold", 100)
-            .build();
+        let goal = Goal::new("resource_goal").requires("gold", 100).build();
 
         let state = State::new().set("gold", 100).build();
         assert!(goal.is_satisfied(&state));
@@ -183,9 +202,7 @@ mod tests {
     /// Failure: Integer goal satisfaction doesn't handle exceeding values correctly
     #[test]
     fn test_satisfaction_i64_exceeding() {
-        let goal = Goal::new("resource_goal")
-            .requires("gold", 100)
-            .build();
+        let goal = Goal::new("resource_goal").requires("gold", 100).build();
 
         let state = State::new().set("gold", 150).build();
         assert!(goal.is_satisfied(&state));
@@ -196,9 +213,7 @@ mod tests {
     /// Failure: Integer goal satisfaction fails to detect insufficient values
     #[test]
     fn test_satisfaction_i64_insufficient() {
-        let goal = Goal::new("resource_goal")
-            .requires("gold", 100)
-            .build();
+        let goal = Goal::new("resource_goal").requires("gold", 100).build();
 
         let state = State::new().set("gold", 50).build();
         assert!(!goal.is_satisfied(&state));
@@ -211,9 +226,7 @@ mod tests {
     /// Failure: Float goal satisfaction logic is broken for exact matches
     #[test]
     fn test_satisfaction_f64_exact_match() {
-        let goal = Goal::new("precision_goal")
-            .requires("health", 75.5)
-            .build();
+        let goal = Goal::new("precision_goal").requires("health", 75.5).build();
 
         let state = State::new().set("health", 75.5).build();
         assert!(goal.is_satisfied(&state));
@@ -224,9 +237,7 @@ mod tests {
     /// Failure: Float goal satisfaction doesn't handle exceeding values correctly
     #[test]
     fn test_satisfaction_f64_exceeding() {
-        let goal = Goal::new("precision_goal")
-            .requires("health", 75.5)
-            .build();
+        let goal = Goal::new("precision_goal").requires("health", 75.5).build();
 
         let state = State::new().set("health", 100.0).build();
         assert!(goal.is_satisfied(&state));
@@ -237,9 +248,7 @@ mod tests {
     /// Failure: Float goal satisfaction fails to detect insufficient values
     #[test]
     fn test_satisfaction_f64_insufficient() {
-        let goal = Goal::new("precision_goal")
-            .requires("health", 75.5)
-            .build();
+        let goal = Goal::new("precision_goal").requires("health", 75.5).build();
 
         let state = State::new().set("health", 50.0).build();
         assert!(!goal.is_satisfied(&state));
@@ -291,7 +300,7 @@ mod tests {
             .set("gold", 150)
             .set("location", "castle")
             .build();
-        
+
         assert!(goal.is_satisfied(&state));
     }
 
@@ -311,7 +320,7 @@ mod tests {
             .set("gold", 50) // Insufficient gold
             .set("location", "castle")
             .build();
-        
+
         assert!(!goal.is_satisfied(&state));
     }
 
@@ -331,7 +340,7 @@ mod tests {
             .set("has_key", true)
             // Missing "gold" variable
             .build();
-        
+
         assert!(!goal.is_satisfied(&state));
     }
 
@@ -342,7 +351,7 @@ mod tests {
     fn test_satisfaction_empty_requirements() {
         let goal = Goal::new("empty_goal").build();
         let state = State::new().set("random_var", true).build();
-        
+
         assert!(goal.is_satisfied(&state));
     }
 
@@ -351,10 +360,8 @@ mod tests {
     /// Failure: Goal satisfaction with empty state is broken
     #[test]
     fn test_satisfaction_empty_state() {
-        let goal = Goal::new("req_goal")
-            .requires("has_item", true)
-            .build();
-        
+        let goal = Goal::new("req_goal").requires("has_item", true).build();
+
         let empty_state = State::empty();
         assert!(!goal.is_satisfied(&empty_state));
     }

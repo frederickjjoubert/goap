@@ -1,4 +1,4 @@
-use crate::state::{State, StateOperation, IntoStateVar};
+use crate::state::{IntoStateVar, State, StateOperation};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -56,7 +56,6 @@ impl Action {
             effects,
         }
     }
-
 
     pub fn can_execute(&self, state: &State) -> bool {
         state.satisfies(&self.preconditions)

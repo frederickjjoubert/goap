@@ -151,7 +151,6 @@ impl State {
             self.vars.insert(key.clone(), value.clone());
         }
     }
-
 }
 
 pub struct StateBuilder {
@@ -164,7 +163,6 @@ impl StateBuilder {
             vars: HashMap::new(),
         }
     }
-
 
     /// Unified method to set any value type
     pub fn set<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {

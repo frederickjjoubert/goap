@@ -1,4 +1,4 @@
-use crate::state::{State, IntoStateVar};
+use crate::state::{IntoStateVar, State};
 use std::fmt;
 
 /// A goal is a desired state of the world that an agent wants to achieve.
@@ -41,7 +41,6 @@ impl Goal {
     pub fn is_satisfied(&self, state: &State) -> bool {
         state.satisfies(&self.desired_state)
     }
-
 }
 
 pub struct GoalBuilder {
@@ -63,7 +62,6 @@ impl GoalBuilder {
         self.priority = priority;
         self
     }
-
 
     /// Unified method to require any value type
     pub fn requires<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {

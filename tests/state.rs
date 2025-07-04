@@ -169,7 +169,10 @@ mod tests {
         assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
         assert_eq!(state.get("int_var"), Some(&StateVar::I64(42)));
         assert_eq!(state.get("float_var"), Some(&StateVar::F64(1500)));
-        assert_eq!(state.get("string_var"), Some(&StateVar::String("test".to_string())));
+        assert_eq!(
+            state.get("string_var"),
+            Some(&StateVar::String("test".to_string()))
+        );
         assert_eq!(state.get("nonexistent"), None);
     }
 
@@ -292,15 +295,27 @@ mod tests {
         state.set("string_var", StateVar::String("old".to_string()));
 
         let mut changes = HashMap::new();
-        changes.insert("bool_var".to_string(), StateOperation::Set(StateVar::Bool(true)));
-        changes.insert("int_var".to_string(), StateOperation::Set(StateVar::I64(20)));
-        changes.insert("string_var".to_string(), StateOperation::Set(StateVar::String("new".to_string())));
+        changes.insert(
+            "bool_var".to_string(),
+            StateOperation::Set(StateVar::Bool(true)),
+        );
+        changes.insert(
+            "int_var".to_string(),
+            StateOperation::Set(StateVar::I64(20)),
+        );
+        changes.insert(
+            "string_var".to_string(),
+            StateOperation::Set(StateVar::String("new".to_string())),
+        );
 
         state.apply(&changes);
 
         assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
         assert_eq!(state.get("int_var"), Some(&StateVar::I64(20)));
-        assert_eq!(state.get("string_var"), Some(&StateVar::String("new".to_string())));
+        assert_eq!(
+            state.get("string_var"),
+            Some(&StateVar::String("new".to_string()))
+        );
     }
 
     /// Test State apply with Add operations on i64
@@ -397,7 +412,10 @@ mod tests {
 
         assert_eq!(state1.get("var1"), Some(&StateVar::Bool(true)));
         assert_eq!(state1.get("var2"), Some(&StateVar::I64(20))); // Overridden
-        assert_eq!(state1.get("var3"), Some(&StateVar::String("test".to_string())));
+        assert_eq!(
+            state1.get("var3"),
+            Some(&StateVar::String("test".to_string()))
+        );
     }
 
     // Tests for State hash consistency
@@ -448,7 +466,7 @@ mod tests {
 
         // Test wrong type
         match state.get("int_var") {
-            Some(StateVar::I64(_)) => {}, // This is expected, not an error
+            Some(StateVar::I64(_)) => {} // This is expected, not an error
             _ => panic!("Expected I64 value"),
         }
     }
@@ -473,7 +491,7 @@ mod tests {
 
         // Test wrong type
         match state.get("bool_var") {
-            Some(StateVar::Bool(_)) => {}, // This is expected, not an error
+            Some(StateVar::Bool(_)) => {} // This is expected, not an error
             _ => panic!("Expected Bool value"),
         }
     }
@@ -498,7 +516,7 @@ mod tests {
 
         // Test wrong type
         match state.get("bool_var") {
-            Some(StateVar::Bool(_)) => {}, // This is expected, not an error
+            Some(StateVar::Bool(_)) => {} // This is expected, not an error
             _ => panic!("Expected Bool value"),
         }
     }
@@ -523,7 +541,7 @@ mod tests {
 
         // Test wrong type
         match state.get("bool_var") {
-            Some(StateVar::Bool(_)) => {}, // This is expected, not an error
+            Some(StateVar::Bool(_)) => {} // This is expected, not an error
             _ => panic!("Expected Bool value"),
         }
     }
@@ -563,7 +581,10 @@ mod tests {
     #[test]
     fn test_state_builder_enum_val() {
         let state = State::new().set("location", "town").build();
-        assert_eq!(state.get("location"), Some(&StateVar::String("town".to_string())));
+        assert_eq!(
+            state.get("location"),
+            Some(&StateVar::String("town".to_string()))
+        );
     }
 
     /// Test StateBuilder unified set method
@@ -581,7 +602,10 @@ mod tests {
         assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
         assert_eq!(state.get("energy"), Some(&StateVar::I64(100)));
         assert_eq!(state.get("temperature"), Some(&StateVar::F64(22500))); // 22.5 * 1000
-        assert_eq!(state.get("location"), Some(&StateVar::String("forest".to_string())));
+        assert_eq!(
+            state.get("location"),
+            Some(&StateVar::String("forest".to_string()))
+        );
     }
 
     /// Test StateBuilder method chaining
@@ -600,8 +624,14 @@ mod tests {
         assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
         assert_eq!(state.get("wood_count"), Some(&StateVar::I64(5)));
         assert_eq!(state.get("health"), Some(&StateVar::F64(100000)));
-        assert_eq!(state.get("location"), Some(&StateVar::String("forest".to_string())));
-        assert_eq!(state.get("weather"), Some(&StateVar::String("sunny".to_string())));
+        assert_eq!(
+            state.get("location"),
+            Some(&StateVar::String("forest".to_string()))
+        );
+        assert_eq!(
+            state.get("weather"),
+            Some(&StateVar::String("sunny".to_string()))
+        );
     }
 
     // Tests for StateOperation helper methods
@@ -611,9 +641,15 @@ mod tests {
     /// Failure: StateOperation i64 helper methods are broken
     #[test]
     fn test_state_operation_i64_helpers() {
-        assert_eq!(StateOperation::set_i64(100), StateOperation::Set(StateVar::I64(100)));
+        assert_eq!(
+            StateOperation::set_i64(100),
+            StateOperation::Set(StateVar::I64(100))
+        );
         assert_eq!(StateOperation::add_i64(50), StateOperation::Add(50));
-        assert_eq!(StateOperation::subtract_i64(25), StateOperation::Subtract(25));
+        assert_eq!(
+            StateOperation::subtract_i64(25),
+            StateOperation::Subtract(25)
+        );
     }
 
     /// Test StateOperation helper methods for f64
@@ -621,9 +657,15 @@ mod tests {
     /// Failure: StateOperation f64 helper methods are broken
     #[test]
     fn test_state_operation_f64_helpers() {
-        assert_eq!(StateOperation::set_f64(1.5), StateOperation::Set(StateVar::F64(1500)));
+        assert_eq!(
+            StateOperation::set_f64(1.5),
+            StateOperation::Set(StateVar::F64(1500))
+        );
         assert_eq!(StateOperation::add_f64(0.5), StateOperation::Add(500));
-        assert_eq!(StateOperation::subtract_f64(0.25), StateOperation::Subtract(250));
+        assert_eq!(
+            StateOperation::subtract_f64(0.25),
+            StateOperation::Subtract(250)
+        );
     }
 
     /// Test StateOperation f64 helpers with rounding
@@ -632,13 +674,19 @@ mod tests {
     #[test]
     fn test_state_operation_f64_rounding() {
         // Test rounding in set_f64
-        assert_eq!(StateOperation::set_f64(1.2345), StateOperation::Set(StateVar::F64(1235)));
-        
+        assert_eq!(
+            StateOperation::set_f64(1.2345),
+            StateOperation::Set(StateVar::F64(1235))
+        );
+
         // Test rounding in add_f64
         assert_eq!(StateOperation::add_f64(0.1234), StateOperation::Add(123));
-        
+
         // Test rounding in subtract_f64
-        assert_eq!(StateOperation::subtract_f64(0.6789), StateOperation::Subtract(679));
+        assert_eq!(
+            StateOperation::subtract_f64(0.6789),
+            StateOperation::Subtract(679)
+        );
     }
 
     /// Test complete f64 workflow with helper methods
@@ -664,8 +712,8 @@ mod tests {
 
         // Test set with helper
         changes.clear();
-        changes.insert("value".to_string(), StateOperation::set_f64(3.14159)); // Should round to 3.142
+        changes.insert("value".to_string(), StateOperation::set_f64(3.04159)); // Should round to 3.042
         state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(3.142));
+        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(3.042));
     }
 }
