@@ -1,29 +1,28 @@
 use goap::prelude::*;
 
 fn main() {
-    // Create initial state
-    let initial_state = State::builder()
-        .bool("has_wood", false)
-        .bool("has_axe", true)
-        .bool("at_tree", false)
+    // Create initial state using new unified API
+    let initial_state = State::new()
+        .set("has_wood", false) // Unified method works with all types
+        .set("has_axe", true)
+        .set("at_tree", false)
         .build();
 
-    // Create goal state
-    let goal = Goal::builder("gather_wood")
-        .require_bool("has_wood", true)
+    // Create goal state using new unified API
+    let goal = Goal::new("gather_wood") // Streamlined construction
+        .requires("has_wood", true) // Unified method
         .build();
 
-    // Create actions
-    let move_to_tree = Action::builder("move_to_tree")
-        .cost(1.0)
-        .effect_set_to("at_tree", true)
+    // Create actions using new shorter syntax
+    let move_to_tree = Action::new("move_to_tree")
+        .sets("at_tree", true) // Shorter method name
         .build();
 
-    let chop_tree = Action::builder("chop_tree")
+    let chop_tree = Action::new("chop_tree")
         .cost(2.0)
-        .precondition("has_axe", true)
-        .precondition("at_tree", true)
-        .effect_set_to("has_wood", true)
+        .requires("has_axe", true) // Shorter method name
+        .requires("at_tree", true)
+        .sets("has_wood", true) // Shorter method name
         .build();
 
     // Collect all actions

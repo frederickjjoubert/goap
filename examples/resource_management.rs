@@ -2,57 +2,55 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state
-    let initial_state = State::builder()
-        .int("wood_logs", 0)
-        .int("planks", 0)
-        .bool("has_saw", false)
-        .int("coins", 10)
-        .bool("at_store", false)
-        .bool("at_forest", false)
+    let initial_state = State::new()
+        .set("wood_logs", 0)
+        .set("planks", 0)
+        .set("has_saw", false)
+        .set("coins", 10)
+        .set("at_store", false)
+        .set("at_forest", false)
         .build();
 
     // Goal: Have at least 5 planks
-    let goal = Goal::builder("craft_planks")
-        .require_int("planks", 5)
-        .build();
+    let goal = Goal::new("craft_planks").requires("planks", 5).build();
 
     // Action: Go to store
-    let goto_store = Action::builder("goto_store")
+    let goto_store = Action::new("goto_store")
         .cost(1.0)
-        .effect_set_to("at_store", true)
-        .effect_set_to("at_forest", false)
+        .sets("at_store", true)
+        .sets("at_forest", false)
         .build();
 
     // Action: Buy saw
-    let buy_saw = Action::builder("buy_saw")
+    let buy_saw = Action::new("buy_saw")
         .cost(1.0)
-        .precondition("at_store", true)
-        .precondition("coins", 5)
-        .effect_set_to("has_saw", true)
-        .effect_subtract_int("coins", 5)
+        .requires("at_store", true)
+        .requires("coins", 5)
+        .sets("has_saw", true)
+        .subtracts("coins", 5)
         .build();
 
     // Action: Go to forest
-    let goto_forest = Action::builder("goto_forest")
+    let goto_forest = Action::new("goto_forest")
         .cost(1.0)
-        .effect_set_to("at_forest", true)
-        .effect_set_to("at_store", false)
+        .sets("at_forest", true)
+        .sets("at_store", false)
         .build();
 
     // Action: Gather wood
-    let gather_wood = Action::builder("gather_wood")
+    let gather_wood = Action::new("gather_wood")
         .cost(2.0)
-        .precondition("at_forest", true)
-        .effect_add_int("wood_logs", 3)
+        .requires("at_forest", true)
+        .adds("wood_logs", 3)
         .build();
 
     // Action: Craft planks
-    let craft_planks = Action::builder("craft_planks")
+    let craft_planks = Action::new("craft_planks")
         .cost(2.0)
-        .precondition("wood_logs", 3)
-        .precondition("has_saw", true)
-        .effect_set_to("planks", 6)
-        .effect_set_to("wood_logs", 0)
+        .requires("wood_logs", 3)
+        .requires("has_saw", true)
+        .sets("planks", 6)
+        .sets("wood_logs", 0)
         .build();
 
     // Collect all actions

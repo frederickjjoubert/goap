@@ -2,44 +2,42 @@ use goap::prelude::*;
 
 fn main() {
     // Create initial state
-    let initial_state = State::builder()
-        .bool("has_wood", false)
-        .bool("has_axe", false)
-        .bool("has_money", true)
-        .bool("at_store", false)
-        .bool("at_tree", false)
+    let initial_state = State::new()
+        .set("has_wood", false)
+        .set("has_axe", false)
+        .set("has_money", true)
+        .set("at_store", false)
+        .set("at_tree", false)
         .build();
 
     // Create goal state
-    let goal = Goal::builder("gather_wood")
-        .require_bool("has_wood", true)
-        .build();
+    let goal = Goal::new("gather_wood").requires("has_wood", true).build();
 
     // Create actions
-    let goto_store = Action::builder("goto_store")
+    let goto_store = Action::new("goto_store")
         .cost(1.0)
-        .effect_set_to("at_store", true)
+        .sets("at_store", true)
         .build();
 
-    let buy_axe = Action::builder("buy_axe")
+    let buy_axe = Action::new("buy_axe")
         .cost(1.0)
-        .precondition("at_store", true)
-        .precondition("has_money", true)
-        .effect_set_to("has_axe", true)
-        .effect_set_to("has_money", false)
+        .requires("at_store", true)
+        .requires("has_money", true)
+        .sets("has_axe", true)
+        .sets("has_money", false)
         .build();
 
-    let goto_tree = Action::builder("goto_tree")
+    let goto_tree = Action::new("goto_tree")
         .cost(1.0)
-        .effect_set_to("at_store", false)
-        .effect_set_to("at_tree", true)
+        .sets("at_store", false)
+        .sets("at_tree", true)
         .build();
 
-    let chop_tree = Action::builder("chop_tree")
+    let chop_tree = Action::new("chop_tree")
         .cost(2.0)
-        .precondition("has_axe", true)
-        .precondition("at_tree", true)
-        .effect_set_to("has_wood", true)
+        .requires("has_axe", true)
+        .requires("at_tree", true)
+        .sets("has_wood", true)
         .build();
 
     // Collect all actions

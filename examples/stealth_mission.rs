@@ -2,82 +2,82 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - starting conditions for the stealth mission
-    let initial_state = State::builder()
-        .bool("player_detected", false)
-        .int("guard_alert_level", 0)
-        .bool("security_cameras_active", true)
-        .bool("has_disguise", false)
-        .bool("has_security_keycard", false)
-        .bool("target_location_accessible", false)
-        .bool("guard_patrol_memorized", false)
-        .bool("hacking_tools_available", false)
-        .int("emp_charges", 0)
-        .int("distractions_available", 0)
-        .int("current_noise_level", 0)
-        .enum_val("current_location", "entrance")
+    let initial_state = State::new()
+        .set("player_detected", false)
+        .set("guard_alert_level", 0)
+        .set("security_cameras_active", true)
+        .set("has_disguise", false)
+        .set("has_security_keycard", false)
+        .set("target_location_accessible", false)
+        .set("guard_patrol_memorized", false)
+        .set("hacking_tools_available", false)
+        .set("emp_charges", 0)
+        .set("distractions_available", 0)
+        .set("current_noise_level", 0)
+        .set("current_location", "entrance")
         .build();
 
     // Goal state - successfully infiltrate without being detected
-    let goal = Goal::builder("stealth_infiltration")
-        .require_enum("current_location", "vault")
-        .require_bool("player_detected", false)
-        .require_bool("target_location_accessible", true)
-        .require_int("guard_alert_level", 0)
+    let goal = Goal::new("stealth_infiltration")
+        .requires("current_location", "vault")
+        .requires("player_detected", false)
+        .requires("target_location_accessible", true)
+        .requires("guard_alert_level", 0)
         .build();
 
     // Action: Observe Guard Patterns
-    let observe_guards = Action::builder("observe_guard_patterns")
+    let observe_guards = Action::new("observe_guard_patterns")
         .cost(2.0)
-        .precondition("player_detected", false)
-        .effect_set_to("guard_patrol_memorized", true)
+        .requires("player_detected", false)
+        .sets("guard_patrol_memorized", true)
         .build();
 
     // Action: Acquire Disguise
-    let acquire_disguise = Action::builder("acquire_disguise")
+    let acquire_disguise = Action::new("acquire_disguise")
         .cost(3.0)
-        .precondition("player_detected", false)
-        .precondition("current_location", "entrance")
-        .effect_set_to("has_disguise", true)
+        .requires("player_detected", false)
+        .requires("current_location", "entrance")
+        .sets("has_disguise", true)
         .build();
 
     // Action: Obtain Hacking Tools
-    let obtain_tools = Action::builder("obtain_hacking_tools")
+    let obtain_tools = Action::new("obtain_hacking_tools")
         .cost(2.0)
-        .effect_set_to("hacking_tools_available", true)
+        .sets("hacking_tools_available", true)
         .build();
 
     // Action: Hack Security System
-    let hack_security = Action::builder("hack_security")
+    let hack_security = Action::new("hack_security")
         .cost(4.0)
-        .precondition("hacking_tools_available", true)
-        .precondition("player_detected", false)
-        .effect_set_to("security_cameras_active", false)
-        .effect_set_to("has_security_keycard", true)
+        .requires("hacking_tools_available", true)
+        .requires("player_detected", false)
+        .sets("security_cameras_active", false)
+        .sets("has_security_keycard", true)
         .build();
 
     // Action: Create Distraction
-    let create_distraction = Action::builder("create_distraction")
+    let create_distraction = Action::new("create_distraction")
         .cost(1.0)
-        .effect_add_int("distractions_available", 1)
-        .effect_add_int("current_noise_level", 2)
+        .adds("distractions_available", 1)
+        .adds("current_noise_level", 2)
         .build();
 
     // Action: Move to Security Room
-    let move_to_security = Action::builder("move_to_security_room")
+    let move_to_security = Action::new("move_to_security_room")
         .cost(2.0)
-        .precondition("player_detected", false)
-        .precondition("guard_patrol_memorized", true)
-        .effect_set_to("current_location", "security_room")
+        .requires("player_detected", false)
+        .requires("guard_patrol_memorized", true)
+        .sets("current_location", "security_room")
         .build();
 
     // Action: Move to Vault
-    let move_to_vault = Action::builder("move_to_vault")
+    let move_to_vault = Action::new("move_to_vault")
         .cost(3.0)
-        .precondition("current_location", "security_room")
-        .precondition("has_security_keycard", true)
-        .precondition("player_detected", false)
-        .effect_set_to("current_location", "vault")
-        .effect_set_to("target_location_accessible", true)
+        .requires("current_location", "security_room")
+        .requires("has_security_keycard", true)
+        .requires("player_detected", false)
+        .sets("current_location", "vault")
+        .sets("target_location_accessible", true)
         .build();
 
     // Collect all actions

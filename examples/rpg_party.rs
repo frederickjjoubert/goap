@@ -2,108 +2,108 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - current party members and their attributes
-    let initial_state = State::builder()
+    let initial_state = State::new()
         // Party composition
-        .bool("tank_available", true)
-        .bool("healer_available", false)
-        .bool("dps_available", true)
+        .set("tank_available", true)
+        .set("healer_available", false)
+        .set("dps_available", true)
         // Party member stats
-        .int("tank_health", 50)
-        .int("tank_armor", 30)
-        .int("dps_damage", 40)
-        .int("party_size", 2)
+        .set("tank_health", 50)
+        .set("tank_armor", 30)
+        .set("dps_damage", 40)
+        .set("party_size", 2)
         // Status effects
-        .bool("tank_poisoned", true)
-        .bool("dps_cursed", true)
+        .set("tank_poisoned", true)
+        .set("dps_cursed", true)
         // Resources
-        .int("gold", 400)
-        .int("healing_potions", 1)
-        .int("antidote_potions", 0)
-        .int("remove_curse_scrolls", 0)
+        .set("gold", 400)
+        .set("healing_potions", 1)
+        .set("antidote_potions", 0)
+        .set("remove_curse_scrolls", 0)
         .build();
 
     // Goal state - party ready for dungeon
-    let goal = Goal::builder("prepare_dungeon_party")
-        .require_bool("healer_available", true)
-        .require_int("tank_health", 100)
-        .require_int("tank_armor", 50)
-        .require_bool("tank_poisoned", false)
-        .require_bool("dps_cursed", false)
-        .require_int("dps_damage", 60)
-        .require_int("party_size", 3)
+    let goal = Goal::new("prepare_dungeon_party")
+        .requires("healer_available", true)
+        .requires("tank_health", 100)
+        .requires("tank_armor", 50)
+        .requires("tank_poisoned", false)
+        .requires("dps_cursed", false)
+        .requires("dps_damage", 60)
+        .requires("party_size", 3)
         .build();
 
     // Action: Recruit Healer
-    let recruit_healer = Action::builder("recruit_healer")
+    let recruit_healer = Action::new("recruit_healer")
         .cost(3.0)
-        .precondition("gold", 100)
-        .effect_set_to("healer_available", true)
-        .effect_add_int("party_size", 1)
-        .effect_subtract_int("gold", 100)
+        .requires("gold", 100)
+        .sets("healer_available", true)
+        .adds("party_size", 1)
+        .subtracts("gold", 100)
         .build();
 
     // Action: Buy Healing Potion
-    let buy_healing = Action::builder("buy_healing_potion")
+    let buy_healing = Action::new("buy_healing_potion")
         .cost(1.0)
-        .precondition("gold", 50)
-        .effect_add_int("healing_potions", 1)
-        .effect_subtract_int("gold", 50)
+        .requires("gold", 50)
+        .adds("healing_potions", 1)
+        .subtracts("gold", 50)
         .build();
 
     // Action: Buy Antidote
-    let buy_antidote = Action::builder("buy_antidote")
+    let buy_antidote = Action::new("buy_antidote")
         .cost(1.0)
-        .precondition("gold", 30)
-        .effect_add_int("antidote_potions", 1)
-        .effect_subtract_int("gold", 30)
+        .requires("gold", 30)
+        .adds("antidote_potions", 1)
+        .subtracts("gold", 30)
         .build();
 
     // Action: Buy Remove Curse Scroll
-    let buy_scroll = Action::builder("buy_remove_curse_scroll")
+    let buy_scroll = Action::new("buy_remove_curse_scroll")
         .cost(1.0)
-        .precondition("gold", 40)
-        .effect_add_int("remove_curse_scrolls", 1)
-        .effect_subtract_int("gold", 40)
+        .requires("gold", 40)
+        .adds("remove_curse_scrolls", 1)
+        .subtracts("gold", 40)
         .build();
 
     // Action: Heal Tank
-    let heal_tank = Action::builder("heal_tank")
+    let heal_tank = Action::new("heal_tank")
         .cost(1.0)
-        .precondition("healing_potions", 1)
-        .effect_set_to("tank_health", 100)
-        .effect_subtract_int("healing_potions", 1)
+        .requires("healing_potions", 1)
+        .sets("tank_health", 100)
+        .subtracts("healing_potions", 1)
         .build();
 
     // Action: Cure Tank Poison
-    let cure_poison = Action::builder("cure_tank_poison")
+    let cure_poison = Action::new("cure_tank_poison")
         .cost(1.0)
-        .precondition("antidote_potions", 1)
-        .effect_set_to("tank_poisoned", false)
-        .effect_subtract_int("antidote_potions", 1)
+        .requires("antidote_potions", 1)
+        .sets("tank_poisoned", false)
+        .subtracts("antidote_potions", 1)
         .build();
 
     // Action: Remove DPS Curse
-    let remove_curse = Action::builder("remove_dps_curse")
+    let remove_curse = Action::new("remove_dps_curse")
         .cost(1.0)
-        .precondition("remove_curse_scrolls", 1)
-        .effect_set_to("dps_cursed", false)
-        .effect_subtract_int("remove_curse_scrolls", 1)
+        .requires("remove_curse_scrolls", 1)
+        .sets("dps_cursed", false)
+        .subtracts("remove_curse_scrolls", 1)
         .build();
 
     // Action: Upgrade Tank Armor
-    let upgrade_armor = Action::builder("upgrade_tank_armor")
+    let upgrade_armor = Action::new("upgrade_tank_armor")
         .cost(2.0)
-        .precondition("gold", 80)
-        .effect_set_to("tank_armor", 50)
-        .effect_subtract_int("gold", 80)
+        .requires("gold", 80)
+        .sets("tank_armor", 50)
+        .subtracts("gold", 80)
         .build();
 
     // Action: Upgrade DPS Weapon
-    let upgrade_weapon = Action::builder("upgrade_dps_weapon")
+    let upgrade_weapon = Action::new("upgrade_dps_weapon")
         .cost(2.0)
-        .precondition("gold", 90)
-        .effect_set_to("dps_damage", 60)
-        .effect_subtract_int("gold", 90)
+        .requires("gold", 90)
+        .sets("dps_damage", 60)
+        .subtracts("gold", 90)
         .build();
 
     // Collect all actions

@@ -2,94 +2,94 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - guard starts at base without radio
-    let initial_state = State::builder()
-        .bool("at_base", true)
-        .bool("at_point_a", false)
-        .bool("at_point_b", false)
-        .bool("at_point_c", false)
-        .bool("has_radio", false)
-        .bool("reported_at_a", false)
-        .bool("reported_at_b", false)
-        .bool("reported_at_c", false)
+    let initial_state = State::new()
+        .set("at_base", true)
+        .set("at_point_a", false)
+        .set("at_point_b", false)
+        .set("at_point_c", false)
+        .set("has_radio", false)
+        .set("reported_at_a", false)
+        .set("reported_at_b", false)
+        .set("reported_at_c", false)
         .build();
 
     // Goal state - complete patrol route and return to base
-    let goal = Goal::builder("complete_patrol")
-        .require_bool("has_radio", true)
-        .require_bool("reported_at_a", true)
-        .require_bool("reported_at_b", true)
-        .require_bool("reported_at_c", true)
-        .require_bool("at_base", true)
+    let goal = Goal::new("complete_patrol")
+        .requires("has_radio", true)
+        .requires("reported_at_a", true)
+        .requires("reported_at_b", true)
+        .requires("reported_at_c", true)
+        .requires("at_base", true)
         .build();
 
     // Action: Equip Radio at Base
-    let equip_radio = Action::builder("equip_radio")
+    let equip_radio = Action::new("equip_radio")
         .cost(1.0)
-        .precondition("at_base", true)
-        .precondition("has_radio", false)
-        .effect_set_to("has_radio", true)
+        .requires("at_base", true)
+        .requires("has_radio", false)
+        .sets("has_radio", true)
         .build();
 
     // Action: Move to Point A
-    let goto_point_a = Action::builder("move_to_point_a")
+    let goto_point_a = Action::new("move_to_point_a")
         .cost(5.0)
-        .effect_set_to("at_point_a", true)
-        .effect_set_to("at_base", false)
-        .effect_set_to("at_point_b", false)
-        .effect_set_to("at_point_c", false)
+        .sets("at_point_a", true)
+        .sets("at_base", false)
+        .sets("at_point_b", false)
+        .sets("at_point_c", false)
         .build();
 
     // Action: Move to Point B
-    let goto_point_b = Action::builder("move_to_point_b")
+    let goto_point_b = Action::new("move_to_point_b")
         .cost(5.0)
-        .effect_set_to("at_point_b", true)
-        .effect_set_to("at_base", false)
-        .effect_set_to("at_point_a", false)
-        .effect_set_to("at_point_c", false)
+        .sets("at_point_b", true)
+        .sets("at_base", false)
+        .sets("at_point_a", false)
+        .sets("at_point_c", false)
         .build();
 
     // Action: Move to Point C
-    let goto_point_c = Action::builder("move_to_point_c")
+    let goto_point_c = Action::new("move_to_point_c")
         .cost(5.0)
-        .effect_set_to("at_point_c", true)
-        .effect_set_to("at_base", false)
-        .effect_set_to("at_point_a", false)
-        .effect_set_to("at_point_b", false)
+        .sets("at_point_c", true)
+        .sets("at_base", false)
+        .sets("at_point_a", false)
+        .sets("at_point_b", false)
         .build();
 
     // Action: Return to Base
-    let goto_base = Action::builder("return_to_base")
+    let goto_base = Action::new("return_to_base")
         .cost(5.0)
-        .effect_set_to("at_base", true)
-        .effect_set_to("at_point_a", false)
-        .effect_set_to("at_point_b", false)
-        .effect_set_to("at_point_c", false)
+        .sets("at_base", true)
+        .sets("at_point_a", false)
+        .sets("at_point_b", false)
+        .sets("at_point_c", false)
         .build();
 
     // Action: Report at Point A
-    let report_at_a = Action::builder("report_at_point_a")
+    let report_at_a = Action::new("report_at_point_a")
         .cost(2.0)
-        .precondition("has_radio", true)
-        .precondition("at_point_a", true)
-        .effect_set_to("reported_at_a", true)
+        .requires("has_radio", true)
+        .requires("at_point_a", true)
+        .sets("reported_at_a", true)
         .build();
 
     // Action: Report at Point B
-    let report_at_b = Action::builder("report_at_point_b")
+    let report_at_b = Action::new("report_at_point_b")
         .cost(2.0)
-        .precondition("has_radio", true)
-        .precondition("at_point_b", true)
-        .precondition("reported_at_a", true) // Must report at A first
-        .effect_set_to("reported_at_b", true)
+        .requires("has_radio", true)
+        .requires("at_point_b", true)
+        .requires("reported_at_a", true) // Must report at A first
+        .sets("reported_at_b", true)
         .build();
 
     // Action: Report at Point C
-    let report_at_c = Action::builder("report_at_point_c")
+    let report_at_c = Action::new("report_at_point_c")
         .cost(2.0)
-        .precondition("has_radio", true)
-        .precondition("at_point_c", true)
-        .precondition("reported_at_b", true) // Must report at B first
-        .effect_set_to("reported_at_c", true)
+        .requires("has_radio", true)
+        .requires("at_point_c", true)
+        .requires("reported_at_b", true) // Must report at B first
+        .sets("reported_at_c", true)
         .build();
 
     // Collect all actions
@@ -168,7 +168,7 @@ fn main() {
     let mut current_state = initial_state_copy;
 
     println!("\nSimulating plan execution:");
-    for action in &actions {
+    for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
         let name = &action.name;
         println!("After {name}: ");

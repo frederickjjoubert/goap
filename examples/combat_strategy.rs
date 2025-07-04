@@ -2,72 +2,72 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - player is not ready for combat
-    let initial_state = State::builder()
-        .int("health", 30) // Low health (30/100)
-        .int("armor", 0) // No armor
-        .int("ammo", 5) // Low ammo
-        .bool("at_medical", false)
-        .bool("at_armory", false)
-        .bool("at_trading", false)
-        .int("has_credits", 100) // Starting credits
+    let initial_state = State::new()
+        .set("health", 30) // Low health (30/100)
+        .set("armor", 0) // No armor
+        .set("ammo", 5) // Low ammo
+        .set("at_medical", false)
+        .set("at_armory", false)
+        .set("at_trading", false)
+        .set("has_credits", 100) // Starting credits
         .build();
 
     // Goal state - ready for boss battle
-    let goal = Goal::builder("prepare_for_boss")
-        .require_int("health", 100) // Full health
-        .require_int("armor", 50) // Decent armor
-        .require_int("ammo", 50) // Sufficient ammo
+    let goal = Goal::new("prepare_for_boss")
+        .requires("health", 100) // Full health
+        .requires("armor", 50) // Decent armor
+        .requires("ammo", 50) // Sufficient ammo
         .build();
 
     // Action: Move to medical bay
-    let goto_medical = Action::builder("goto_medical")
+    let goto_medical = Action::new("goto_medical")
         .cost(1.0)
-        .effect_set_to("at_medical", true)
-        .effect_set_to("at_armory", false)
-        .effect_set_to("at_trading", false)
+        .sets("at_medical", true)
+        .sets("at_armory", false)
+        .sets("at_trading", false)
         .build();
 
     // Action: Move to armory
-    let goto_armory = Action::builder("goto_armory")
+    let goto_armory = Action::new("goto_armory")
         .cost(1.0)
-        .effect_set_to("at_armory", true)
-        .effect_set_to("at_medical", false)
-        .effect_set_to("at_trading", false)
+        .sets("at_armory", true)
+        .sets("at_medical", false)
+        .sets("at_trading", false)
         .build();
 
     // Action: Move to trading post
-    let goto_trading = Action::builder("goto_trading")
+    let goto_trading = Action::new("goto_trading")
         .cost(1.0)
-        .effect_set_to("at_trading", true)
-        .effect_set_to("at_medical", false)
-        .effect_set_to("at_armory", false)
+        .sets("at_trading", true)
+        .sets("at_medical", false)
+        .sets("at_armory", false)
         .build();
 
     // Action: Use health station
-    let heal = Action::builder("use_health_station")
+    let heal = Action::new("use_health_station")
         .cost(2.0)
-        .precondition("at_medical", true)
-        .precondition("has_credits", 20)
-        .effect_set_to("health", 100)
-        .effect_subtract_int("has_credits", 20)
+        .requires("at_medical", true)
+        .requires("has_credits", 20)
+        .sets("health", 100)
+        .subtracts("has_credits", 20)
         .build();
 
     // Action: Buy armor
-    let buy_armor = Action::builder("buy_armor")
+    let buy_armor = Action::new("buy_armor")
         .cost(2.0)
-        .precondition("at_armory", true)
-        .precondition("has_credits", 30)
-        .effect_set_to("armor", 50)
-        .effect_subtract_int("has_credits", 30)
+        .requires("at_armory", true)
+        .requires("has_credits", 30)
+        .sets("armor", 50)
+        .subtracts("has_credits", 30)
         .build();
 
     // Action: Buy ammo
-    let buy_ammo = Action::builder("buy_ammo")
+    let buy_ammo = Action::new("buy_ammo")
         .cost(1.5)
-        .precondition("at_trading", true)
-        .precondition("has_credits", 25)
-        .effect_set_to("ammo", 50)
-        .effect_subtract_int("has_credits", 25)
+        .requires("at_trading", true)
+        .requires("has_credits", 25)
+        .sets("ammo", 50)
+        .subtracts("has_credits", 25)
         .build();
 
     // Collect all actions

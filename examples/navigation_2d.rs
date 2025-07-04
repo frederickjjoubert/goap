@@ -2,19 +2,19 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - robot starts at position (0,0)
-    let initial_state = State::builder()
-        .int("x", 0)
-        .int("y", 0)
-        .int("battery", 300)
-        .bool("has_package", false)
-        .bool("package_delivered", false)
+    let initial_state = State::new()
+        .set("x", 0)
+        .set("y", 0)
+        .set("battery", 300)
+        .set("has_package", false)
+        .set("package_delivered", false)
         .build();
 
     // Goal state - deliver package to position (8,5)
-    let goal = Goal::builder("deliver_package")
-        .require_int("x", 8)
-        .require_int("y", 5)
-        .require_bool("package_delivered", true)
+    let goal = Goal::new("deliver_package")
+        .requires("x", 8)
+        .requires("y", 5)
+        .requires("package_delivered", true)
         .build();
 
     // Helper function to create GoTo actions between points
@@ -22,7 +22,7 @@ fn main() {
         let distance = ((to.0 - from.0).pow(2) + (to.1 - from.1).pow(2)) as f64;
         let battery_cost = (distance * 5.0) as i64; // Battery cost based on distance
 
-        Action::builder(&format!(
+        Action::new(&format!(
             "goto_{}_{}_{to_x}_{to_y}",
             from.0,
             from.1,
@@ -30,12 +30,12 @@ fn main() {
             to_y = to.1
         ))
         .cost(distance)
-        .precondition("x", from.0)
-        .precondition("y", from.1)
-        .precondition("battery", battery_cost)
-        .effect_set_to("x", to.0)
-        .effect_set_to("y", to.1)
-        .effect_subtract_int("battery", battery_cost)
+        .requires("x", from.0)
+        .requires("y", from.1)
+        .requires("battery", battery_cost)
+        .sets("x", to.0)
+        .sets("y", to.1)
+        .subtracts("battery", battery_cost)
         .build()
     }
 
@@ -59,22 +59,22 @@ fn main() {
     }
 
     // Action: Pick up package
-    let pickup_action = Action::builder("pickup_package")
+    let pickup_action = Action::new("pickup_package")
         .cost(1.0)
-        .precondition("x", 5)
-        .precondition("y", 2)
-        .precondition("has_package", false)
-        .effect_set_to("has_package", true)
+        .requires("x", 5)
+        .requires("y", 2)
+        .requires("has_package", false)
+        .sets("has_package", true)
         .build();
 
     // Action: Deliver package
-    let deliver_action = Action::builder("deliver_package")
+    let deliver_action = Action::new("deliver_package")
         .cost(1.0)
-        .precondition("x", 8)
-        .precondition("y", 5)
-        .precondition("has_package", true)
-        .effect_set_to("has_package", false)
-        .effect_set_to("package_delivered", true)
+        .requires("x", 8)
+        .requires("y", 5)
+        .requires("has_package", true)
+        .sets("has_package", false)
+        .sets("package_delivered", true)
         .build();
 
     // Add package actions
