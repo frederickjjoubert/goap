@@ -235,8 +235,8 @@ impl StateBuilder {
     }
 
     /// Unified method to set any value type
-    pub fn set<T: Into<StateVar>>(mut self, key: &str, value: T) -> Self {
-        self.vars.insert(key.to_string(), value.into());
+    pub fn set<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
+        self.vars.insert(key.to_string(), value.into_state_var());
         self
     }
 
@@ -406,6 +406,85 @@ impl From<i16> for StateVar {
 impl From<i8> for StateVar {
     fn from(value: i8) -> Self {
         StateVar::I64(value as i64)
+    }
+}
+
+// Trait for types that can be converted to StateVar, including proper enum support
+pub trait IntoStateVar {
+    fn into_state_var(self) -> StateVar;
+}
+
+// Implement for all existing types
+impl IntoStateVar for bool {
+    fn into_state_var(self) -> StateVar {
+        StateVar::Bool(self)
+    }
+}
+
+impl IntoStateVar for i64 {
+    fn into_state_var(self) -> StateVar {
+        StateVar::I64(self)
+    }
+}
+
+impl IntoStateVar for i32 {
+    fn into_state_var(self) -> StateVar {
+        StateVar::I64(self as i64)
+    }
+}
+
+impl IntoStateVar for i16 {
+    fn into_state_var(self) -> StateVar {
+        StateVar::I64(self as i64)
+    }
+}
+
+impl IntoStateVar for i8 {
+    fn into_state_var(self) -> StateVar {
+        StateVar::I64(self as i64)
+    }
+}
+
+impl IntoStateVar for f64 {
+    fn into_state_var(self) -> StateVar {
+        StateVar::from_f64(self)
+    }
+}
+
+impl IntoStateVar for f32 {
+    fn into_state_var(self) -> StateVar {
+        StateVar::from_f64(self as f64)
+    }
+}
+
+impl IntoStateVar for String {
+    fn into_state_var(self) -> StateVar {
+        StateVar::String(self)
+    }
+}
+
+impl IntoStateVar for &str {
+    fn into_state_var(self) -> StateVar {
+        StateVar::String(self.to_string())
+    }
+}
+
+impl IntoStateVar for StateVar {
+    fn into_state_var(self) -> StateVar {
+        self
+    }
+}
+
+// Helper trait to identify types that should be treated as enums
+pub trait EnumStateVar: fmt::Display {}
+
+// Blanket implementation for any enum that implements Display and our marker trait
+impl<T> IntoStateVar for T
+where
+    T: EnumStateVar,
+{
+    fn into_state_var(self) -> StateVar {
+        StateVar::String(self.to_string())
     }
 }
 

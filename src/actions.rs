@@ -1,4 +1,4 @@
-use crate::state::{State, StateOperation, StateVar};
+use crate::state::{State, StateOperation, IntoStateVar};
 use std::collections::HashMap;
 use std::fmt;
 
@@ -94,14 +94,14 @@ impl ActionBuilder {
         self
     }
 
-    pub fn precondition<T: Into<StateVar>>(mut self, key: &str, value: T) -> Self {
-        self.preconditions.set(key, value.into());
+    pub fn precondition<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
+        self.preconditions.set(key, value.into_state_var());
         self
     }
 
-    pub fn effect_set_to<T: Into<StateVar>>(mut self, key: &str, value: T) -> Self {
+    pub fn effect_set_to<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
         self.effects
-            .insert(key.to_string(), StateOperation::Set(value.into()));
+            .insert(key.to_string(), StateOperation::Set(value.into_state_var()));
         self
     }
 
@@ -130,12 +130,12 @@ impl ActionBuilder {
     }
 
     /// Alias for precondition
-    pub fn requires<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
+    pub fn requires<T: IntoStateVar>(self, key: &str, value: T) -> Self {
         self.precondition(key, value)
     }
 
     /// Alias for effect_set_to
-    pub fn sets<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
+    pub fn sets<T: IntoStateVar>(self, key: &str, value: T) -> Self {
         self.effect_set_to(key, value)
     }
 
