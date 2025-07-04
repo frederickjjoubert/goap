@@ -1,4 +1,4 @@
-use crate::state::{State, StateVar, IntoStateVar};
+use crate::state::{State, IntoStateVar};
 use std::fmt;
 
 /// A goal is a desired state of the world that an agent wants to achieve.
@@ -42,9 +42,6 @@ impl Goal {
         state.satisfies(&self.desired_state)
     }
 
-    fn builder(name: &str) -> GoalBuilder {
-        GoalBuilder::new(name)
-    }
 }
 
 pub struct GoalBuilder {
@@ -67,26 +64,6 @@ impl GoalBuilder {
         self
     }
 
-    // TODO: Rename this to be clearer, like "wants"
-    fn require_bool(mut self, key: &str, value: bool) -> Self {
-        self.desired_state.set(key, StateVar::Bool(value));
-        self
-    }
-
-    fn require_int(mut self, key: &str, value: i64) -> Self {
-        self.desired_state.set(key, StateVar::I64(value));
-        self
-    }
-
-    fn require_float(mut self, key: &str, value: f64) -> Self {
-        self.desired_state.set(key, StateVar::from_f64(value));
-        self
-    }
-
-    fn require_enum(mut self, key: &str, value: impl Into<String>) -> Self {
-        self.desired_state.set(key, StateVar::String(value.into()));
-        self
-    }
 
     /// Unified method to require any value type
     pub fn requires<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {

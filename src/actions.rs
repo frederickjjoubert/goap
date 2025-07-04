@@ -57,9 +57,6 @@ impl Action {
         }
     }
 
-    fn builder(name: &str) -> ActionBuilder {
-        ActionBuilder::new(name)
-    }
 
     pub fn can_execute(&self, state: &State) -> bool {
         state.satisfies(&self.preconditions)

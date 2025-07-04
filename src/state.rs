@@ -152,54 +152,6 @@ impl State {
         }
     }
 
-    fn builder() -> StateBuilder {
-        StateBuilder::new()
-    }
-
-    // Helper methods for getting typed values
-    fn get_bool(&self, key: &str) -> Result<bool, StateError> {
-        match self.get(key) {
-            Some(StateVar::Bool(val)) => Ok(*val),
-            None => Err(StateError::VarNotFound(key.to_string())),
-            _ => Err(StateError::InvalidVarType {
-                var: key.to_string(),
-                expected: "bool",
-            }),
-        }
-    }
-
-    fn get_int(&self, key: &str) -> Result<i64, StateError> {
-        match self.get(key) {
-            Some(StateVar::I64(val)) => Ok(*val),
-            None => Err(StateError::VarNotFound(key.to_string())),
-            _ => Err(StateError::InvalidVarType {
-                var: key.to_string(),
-                expected: "i64",
-            }),
-        }
-    }
-
-    fn get_float(&self, key: &str) -> Result<f64, StateError> {
-        match self.get(key) {
-            Some(StateVar::F64(val)) => Ok(*val as f64 / 1000.0),
-            None => Err(StateError::VarNotFound(key.to_string())),
-            _ => Err(StateError::InvalidVarType {
-                var: key.to_string(),
-                expected: "f64",
-            }),
-        }
-    }
-
-    fn get_enum(&self, key: &str) -> Result<&str, StateError> {
-        match self.get(key) {
-            Some(StateVar::String(val)) => Ok(val),
-            None => Err(StateError::VarNotFound(key.to_string())),
-            _ => Err(StateError::InvalidVarType {
-                var: key.to_string(),
-                expected: "enum",
-            }),
-        }
-    }
 }
 
 pub struct StateBuilder {
@@ -213,26 +165,6 @@ impl StateBuilder {
         }
     }
 
-    fn bool(mut self, key: &str, value: bool) -> Self {
-        self.vars.insert(key.to_string(), StateVar::Bool(value));
-        self
-    }
-
-    fn int(mut self, key: &str, value: i64) -> Self {
-        self.vars.insert(key.to_string(), StateVar::I64(value));
-        self
-    }
-
-    fn float(mut self, key: &str, value: f64) -> Self {
-        self.vars.insert(key.to_string(), StateVar::from_f64(value));
-        self
-    }
-
-    fn enum_val(mut self, key: &str, value: impl Into<String>) -> Self {
-        self.vars
-            .insert(key.to_string(), StateVar::String(value.into()));
-        self
-    }
 
     /// Unified method to set any value type
     pub fn set<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
