@@ -428,9 +428,9 @@ mod tests {
 
     // Tests for State helper methods
 
-    /// Test State get_bool helper method
-    /// Validates: get_bool returns correct values and proper errors
-    /// Failure: get_bool helper method is broken
+    /// Test State get method with bool pattern matching
+    /// Validates: get method returns correct values and proper errors for bool
+    /// Failure: get method pattern matching is broken
     #[test]
     fn test_state_get_bool() {
         let mut state = State::empty();
@@ -438,18 +438,24 @@ mod tests {
         state.set("int_var", StateVar::I64(42));
 
         // Test successful retrieval
-        assert_eq!(state.get_bool("bool_var"), Ok(true));
+        match state.get("bool_var") {
+            Some(StateVar::Bool(value)) => assert_eq!(*value, true),
+            _ => panic!("Expected Bool value"),
+        }
 
         // Test variable not found
-        assert!(matches!(state.get_bool("nonexistent"), Err(StateError::VarNotFound(_))));
+        assert_eq!(state.get("nonexistent"), None);
 
         // Test wrong type
-        assert!(matches!(state.get_bool("int_var"), Err(StateError::InvalidVarType { .. })));
+        match state.get("int_var") {
+            Some(StateVar::I64(_)) => {}, // This is expected, not an error
+            _ => panic!("Expected I64 value"),
+        }
     }
 
-    /// Test State get_int helper method
-    /// Validates: get_int returns correct values and proper errors
-    /// Failure: get_int helper method is broken
+    /// Test State get method with int pattern matching
+    /// Validates: get method returns correct values and proper errors for int
+    /// Failure: get method pattern matching is broken
     #[test]
     fn test_state_get_int() {
         let mut state = State::empty();
@@ -457,18 +463,24 @@ mod tests {
         state.set("bool_var", StateVar::Bool(true));
 
         // Test successful retrieval
-        assert_eq!(state.get_int("int_var"), Ok(42));
+        match state.get("int_var") {
+            Some(StateVar::I64(value)) => assert_eq!(*value, 42),
+            _ => panic!("Expected I64 value"),
+        }
 
         // Test variable not found
-        assert!(matches!(state.get_int("nonexistent"), Err(StateError::VarNotFound(_))));
+        assert_eq!(state.get("nonexistent"), None);
 
         // Test wrong type
-        assert!(matches!(state.get_int("bool_var"), Err(StateError::InvalidVarType { .. })));
+        match state.get("bool_var") {
+            Some(StateVar::Bool(_)) => {}, // This is expected, not an error
+            _ => panic!("Expected Bool value"),
+        }
     }
 
-    /// Test State get_float helper method
-    /// Validates: get_float returns correct values and proper errors
-    /// Failure: get_float helper method is broken
+    /// Test State get method with float pattern matching
+    /// Validates: get method returns correct values and proper errors for float
+    /// Failure: get method pattern matching is broken
     #[test]
     fn test_state_get_float() {
         let mut state = State::empty();
@@ -476,18 +488,24 @@ mod tests {
         state.set("bool_var", StateVar::Bool(true));
 
         // Test successful retrieval
-        assert_eq!(state.get_float("float_var"), Ok(1.5));
+        match state.get("float_var") {
+            Some(var) => assert_eq!(var.as_f64(), Some(1.5)),
+            _ => panic!("Expected F64 value"),
+        }
 
         // Test variable not found
-        assert!(matches!(state.get_float("nonexistent"), Err(StateError::VarNotFound(_))));
+        assert_eq!(state.get("nonexistent"), None);
 
         // Test wrong type
-        assert!(matches!(state.get_float("bool_var"), Err(StateError::InvalidVarType { .. })));
+        match state.get("bool_var") {
+            Some(StateVar::Bool(_)) => {}, // This is expected, not an error
+            _ => panic!("Expected Bool value"),
+        }
     }
 
-    /// Test State get_enum helper method
-    /// Validates: get_enum returns correct values and proper errors
-    /// Failure: get_enum helper method is broken
+    /// Test State get method with enum/string pattern matching
+    /// Validates: get method returns correct values and proper errors for enum/string
+    /// Failure: get method pattern matching is broken
     #[test]
     fn test_state_get_enum() {
         let mut state = State::empty();
@@ -495,50 +513,56 @@ mod tests {
         state.set("bool_var", StateVar::Bool(true));
 
         // Test successful retrieval
-        assert_eq!(state.get_enum("string_var"), Ok("test"));
+        match state.get("string_var") {
+            Some(StateVar::String(value)) => assert_eq!(value, "test"),
+            _ => panic!("Expected String value"),
+        }
 
         // Test variable not found
-        assert!(matches!(state.get_enum("nonexistent"), Err(StateError::VarNotFound(_))));
+        assert_eq!(state.get("nonexistent"), None);
 
         // Test wrong type
-        assert!(matches!(state.get_enum("bool_var"), Err(StateError::InvalidVarType { .. })));
+        match state.get("bool_var") {
+            Some(StateVar::Bool(_)) => {}, // This is expected, not an error
+            _ => panic!("Expected Bool value"),
+        }
     }
 
     // Tests for StateBuilder functionality
 
-    /// Test StateBuilder bool method
-    /// Validates: Builder bool method properly sets boolean values
-    /// Failure: StateBuilder bool method is broken
+    /// Test StateBuilder set method with bool
+    /// Validates: Builder set method properly sets boolean values
+    /// Failure: StateBuilder set method is broken
     #[test]
     fn test_state_builder_bool() {
-        let state = State::new().bool("has_key", true).build();
+        let state = State::new().set("has_key", true).build();
         assert_eq!(state.get("has_key"), Some(&StateVar::Bool(true)));
     }
 
-    /// Test StateBuilder int method
-    /// Validates: Builder int method properly sets integer values
-    /// Failure: StateBuilder int method is broken
+    /// Test StateBuilder set method with int
+    /// Validates: Builder set method properly sets integer values
+    /// Failure: StateBuilder set method is broken
     #[test]
     fn test_state_builder_int() {
-        let state = State::new().int("gold", 100).build();
+        let state = State::new().set("gold", 100).build();
         assert_eq!(state.get("gold"), Some(&StateVar::I64(100)));
     }
 
-    /// Test StateBuilder float method
-    /// Validates: Builder float method properly sets float values
-    /// Failure: StateBuilder float method is broken
+    /// Test StateBuilder set method with float
+    /// Validates: Builder set method properly sets float values
+    /// Failure: StateBuilder set method is broken
     #[test]
     fn test_state_builder_float() {
-        let state = State::new().float("health", 75.5).build();
+        let state = State::new().set("health", 75.5).build();
         assert_eq!(state.get("health"), Some(&StateVar::F64(75500)));
     }
 
-    /// Test StateBuilder enum_val method
-    /// Validates: Builder enum_val method properly sets string values
-    /// Failure: StateBuilder enum_val method is broken
+    /// Test StateBuilder set method with enum/string
+    /// Validates: Builder set method properly sets string values
+    /// Failure: StateBuilder set method is broken
     #[test]
     fn test_state_builder_enum_val() {
-        let state = State::new().enum_val("location", "town").build();
+        let state = State::new().set("location", "town").build();
         assert_eq!(state.get("location"), Some(&StateVar::String("town".to_string())));
     }
 
@@ -566,10 +590,10 @@ mod tests {
     #[test]
     fn test_state_builder_chaining() {
         let state = State::new()
-            .bool("has_wood", true)
-            .int("wood_count", 5)
-            .float("health", 100.0)
-            .enum_val("location", "forest")
+            .set("has_wood", true)
+            .set("wood_count", 5)
+            .set("health", 100.0)
+            .set("location", "forest")
             .set("weather", "sunny")
             .build();
 

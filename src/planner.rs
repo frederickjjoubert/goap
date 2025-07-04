@@ -216,9 +216,9 @@ mod tests {
     fn test_heuristic() {
         let planner = Planner::new();
 
-        let current = State::builder().int("value", 0).bool("flag", false).build();
+        let current = State::new().set("value", 0).set("flag", false).build();
 
-        let goal = State::builder().int("value", 10).bool("flag", true).build();
+        let goal = State::new().set("value", 10).set("flag", true).build();
 
         let h = planner.heuristic(&current, &goal);
         assert!(h > 0.0); // Should have some distance to goal

@@ -57,7 +57,7 @@ impl Action {
         }
     }
 
-    pub fn builder(name: &str) -> ActionBuilder {
+    fn builder(name: &str) -> ActionBuilder {
         ActionBuilder::new(name)
     }
 
@@ -94,36 +94,36 @@ impl ActionBuilder {
         self
     }
 
-    pub fn precondition<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
+    fn precondition<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
         self.preconditions.set(key, value.into_state_var());
         self
     }
 
-    pub fn effect_set_to<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
+    fn effect_set_to<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
         self.effects
             .insert(key.to_string(), StateOperation::Set(value.into_state_var()));
         self
     }
 
-    pub fn effect_add_int(mut self, key: &str, value: i64) -> Self {
+    fn effect_add_int(mut self, key: &str, value: i64) -> Self {
         self.effects
             .insert(key.to_string(), StateOperation::add_i64(value));
         self
     }
 
-    pub fn effect_subtract_int(mut self, key: &str, value: i64) -> Self {
+    fn effect_subtract_int(mut self, key: &str, value: i64) -> Self {
         self.effects
             .insert(key.to_string(), StateOperation::subtract_i64(value));
         self
     }
 
-    pub fn effect_add_float(mut self, key: &str, value: f64) -> Self {
+    fn effect_add_float(mut self, key: &str, value: f64) -> Self {
         self.effects
             .insert(key.to_string(), StateOperation::add_f64(value));
         self
     }
 
-    pub fn effect_subtract_float(mut self, key: &str, value: f64) -> Self {
+    fn effect_subtract_float(mut self, key: &str, value: f64) -> Self {
         self.effects
             .insert(key.to_string(), StateOperation::subtract_f64(value));
         self

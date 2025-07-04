@@ -42,7 +42,7 @@ impl Goal {
         state.satisfies(&self.desired_state)
     }
 
-    pub fn builder(name: &str) -> GoalBuilder {
+    fn builder(name: &str) -> GoalBuilder {
         GoalBuilder::new(name)
     }
 }
@@ -68,22 +68,22 @@ impl GoalBuilder {
     }
 
     // TODO: Rename this to be clearer, like "wants"
-    pub fn require_bool(mut self, key: &str, value: bool) -> Self {
+    fn require_bool(mut self, key: &str, value: bool) -> Self {
         self.desired_state.set(key, StateVar::Bool(value));
         self
     }
 
-    pub fn require_int(mut self, key: &str, value: i64) -> Self {
+    fn require_int(mut self, key: &str, value: i64) -> Self {
         self.desired_state.set(key, StateVar::I64(value));
         self
     }
 
-    pub fn require_float(mut self, key: &str, value: f64) -> Self {
+    fn require_float(mut self, key: &str, value: f64) -> Self {
         self.desired_state.set(key, StateVar::from_f64(value));
         self
     }
 
-    pub fn require_enum(mut self, key: &str, value: impl Into<String>) -> Self {
+    fn require_enum(mut self, key: &str, value: impl Into<String>) -> Self {
         self.desired_state.set(key, StateVar::String(value.into()));
         self
     }
