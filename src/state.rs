@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt;
 use std::hash::Hash;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum StateError {
     VarNotFound(String),
     InvalidVarType { var: String, expected: &'static str },

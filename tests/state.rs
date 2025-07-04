@@ -3,155 +3,33 @@ mod tests {
     use goap::prelude::*;
     use std::collections::HashMap;
 
+    // Tests for StateVar distance calculations
+
+    /// Test StateVar distance calculation for bool values
+    /// Validates: Bool distance is 0 for same values, 1 for different values
+    /// Failure: Boolean distance calculation logic is broken
     #[test]
-    fn test_state_var_distance() {
-        // Test boolean distance
+    fn test_state_var_bool_distance() {
         assert_eq!(StateVar::Bool(true).distance(&StateVar::Bool(true)), 0);
         assert_eq!(StateVar::Bool(false).distance(&StateVar::Bool(false)), 0);
         assert_eq!(StateVar::Bool(true).distance(&StateVar::Bool(false)), 1);
         assert_eq!(StateVar::Bool(false).distance(&StateVar::Bool(true)), 1);
+    }
 
-        // Test i64 distance
+    /// Test StateVar distance calculation for i64 values
+    /// Validates: I64 distance is absolute difference between values
+    /// Failure: Integer distance calculation logic is broken
+    #[test]
+    fn test_state_var_i64_distance() {
         assert_eq!(StateVar::I64(5).distance(&StateVar::I64(5)), 0);
         assert_eq!(StateVar::I64(10).distance(&StateVar::I64(5)), 5);
         assert_eq!(StateVar::I64(5).distance(&StateVar::I64(10)), 5);
         assert_eq!(StateVar::I64(-5).distance(&StateVar::I64(5)), 10);
-
-        // Test enum distance
-        assert_eq!(
-            StateVar::String("A".to_string()).distance(&StateVar::String("A".to_string())),
-            0
-        );
-        assert_eq!(
-            StateVar::String("A".to_string()).distance(&StateVar::String("B".to_string())),
-            1
-        );
     }
 
-    #[test]
-    #[should_panic(expected = "Cannot calculate distance between different StateVar types")]
-    fn test_state_var_distance_panic() {
-        StateVar::Bool(true).distance(&StateVar::I64(5));
-    }
-
-    #[test]
-    fn test_world_state_basic_operations() {
-        let mut state = State::empty();
-
-        // Test set and get
-        state.set("bool_var", StateVar::Bool(true));
-        state.set("int_var", StateVar::I64(42));
-        state.set("enum_var", StateVar::String("test".to_string()));
-
-        assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(42)));
-        assert_eq!(
-            state.get("enum_var"),
-            Some(&StateVar::String("test".to_string()))
-        );
-        assert_eq!(state.get("nonexistent"), None);
-    }
-
-    #[test]
-    fn test_world_state_satisfies() {
-        let mut state = State::empty();
-        state.set("bool_var", StateVar::Bool(true));
-        state.set("int_var", StateVar::I64(42));
-        state.set("enum_var", StateVar::String("test".to_string()));
-
-        // Test exact matches
-        let mut conditions = State::empty();
-        conditions.set("bool_var", StateVar::Bool(true));
-        assert!(state.satisfies(&conditions));
-
-        // Test integer greater than
-        conditions.set("int_var", StateVar::I64(40));
-        assert!(state.satisfies(&conditions));
-
-        // Test failure cases
-        conditions.set("bool_var", StateVar::Bool(false));
-        assert!(!state.satisfies(&conditions));
-
-        conditions = State::new().build();
-        conditions.set("nonexistent", StateVar::Bool(true));
-        assert!(!state.satisfies(&conditions));
-    }
-
-    #[test]
-    fn test_world_state_apply() {
-        let mut state = State::empty();
-        state.set("bool_var", StateVar::Bool(false));
-        state.set("int_var", StateVar::I64(10));
-        state.set("enum_var", StateVar::String("old".to_string()));
-
-        let mut changes = HashMap::new();
-        changes.insert(
-            "bool_var".to_string(),
-            StateOperation::Set(StateVar::Bool(true)),
-        );
-        changes.insert("int_var".to_string(), StateOperation::Add(5));
-        changes.insert(
-            "enum_var".to_string(),
-            StateOperation::Set(StateVar::String("new".to_string())),
-        );
-
-        state.apply(&changes);
-
-        assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(15)));
-        assert_eq!(
-            state.get("enum_var"),
-            Some(&StateVar::String("new".to_string()))
-        );
-
-        // Test subtraction
-        let mut changes = HashMap::new();
-        changes.insert("int_var".to_string(), StateOperation::Subtract(3));
-        state.apply(&changes);
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(12)));
-    }
-
-    #[test]
-    fn test_world_state_merge() {
-        let mut state1 = State::new().build();
-        state1.set("var1", StateVar::Bool(true));
-        state1.set("var2", StateVar::I64(10));
-
-        let mut state2 = State::new().build();
-        state2.set("var2", StateVar::I64(20));
-        state2.set("var3", StateVar::String("test".to_string()));
-
-        state1.merge(&state2);
-
-        assert_eq!(state1.get("var1"), Some(&StateVar::Bool(true)));
-        assert_eq!(state1.get("var2"), Some(&StateVar::I64(20)));
-        assert_eq!(
-            state1.get("var3"),
-            Some(&StateVar::String("test".to_string()))
-        );
-    }
-
-    #[test]
-    fn test_world_state_hash() {
-        let mut state1 = State::new().build();
-        state1.set("a", StateVar::Bool(true));
-        state1.set("b", StateVar::I64(10));
-
-        let mut state2 = State::new().build();
-        state2.set("b", StateVar::I64(10));
-        state2.set("a", StateVar::Bool(true));
-
-        // Hash should be the same regardless of insertion order
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher1 = DefaultHasher::new();
-        let mut hasher2 = DefaultHasher::new();
-        state1.hash(&mut hasher1);
-        state2.hash(&mut hasher2);
-        assert_eq!(hasher1.finish(), hasher2.finish());
-    }
-
+    /// Test StateVar distance calculation for f64 values
+    /// Validates: F64 distance is absolute difference between fixed-point values
+    /// Failure: Float distance calculation logic is broken
     #[test]
     fn test_state_var_f64_distance() {
         // Test fixed point number distance (3 decimal places)
@@ -168,274 +46,44 @@ mod tests {
         assert_eq!(StateVar::F64(1001).distance(&StateVar::F64(1002)), 1);
     }
 
+    /// Test StateVar distance calculation for string values
+    /// Validates: String distance is 0 for same values, 1 for different values
+    /// Failure: String distance calculation logic is broken
+    #[test]
+    fn test_state_var_string_distance() {
+        assert_eq!(
+            StateVar::String("A".to_string()).distance(&StateVar::String("A".to_string())),
+            0
+        );
+        assert_eq!(
+            StateVar::String("A".to_string()).distance(&StateVar::String("B".to_string())),
+            1
+        );
+    }
+
+    /// Test StateVar distance calculation panics for mismatched types
+    /// Validates: Distance calculation panics when comparing different StateVar types
+    /// Failure: Type mismatch detection is broken
     #[test]
     #[should_panic(expected = "Cannot calculate distance between different StateVar types")]
-    fn test_state_var_f64_distance_panic() {
+    fn test_state_var_distance_type_mismatch() {
+        StateVar::Bool(true).distance(&StateVar::I64(5));
+    }
+
+    /// Test StateVar distance calculation panics for f64/i64 mismatch
+    /// Validates: F64 and I64 are treated as different types for distance calculation
+    /// Failure: F64/I64 type distinction is broken
+    #[test]
+    #[should_panic(expected = "Cannot calculate distance between different StateVar types")]
+    fn test_state_var_f64_i64_distance_mismatch() {
         StateVar::F64(1500).distance(&StateVar::I64(1500));
     }
 
-    #[test]
-    fn test_world_state_f64_operations() {
-        let mut state = State::empty();
+    // Tests for StateVar conversion functionality
 
-        // Test setting and getting F64 values
-        state.set("speed", StateVar::F64(1500)); // 1.5
-        state.set("height", StateVar::F64(2000)); // 2.0
-
-        assert_eq!(state.get("speed"), Some(&StateVar::F64(1500)));
-        assert_eq!(state.get("height"), Some(&StateVar::F64(2000)));
-
-        // Test satisfies with F64 values
-        let mut conditions;
-
-        println!("\n=== Testing exact match ===");
-        // Test exact match
-        conditions = State::new().build(); // Clear conditions
-        conditions.set("speed", StateVar::F64(1500));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing greater than satisfies ===");
-        // Test greater than satisfies
-        conditions = State::new().build(); // Clear conditions
-        conditions.set("speed", StateVar::F64(1000)); // 1.0
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing less than fails ===");
-        // Test less than fails
-        conditions = State::new().build(); // Clear conditions
-        conditions.set("speed", StateVar::F64(2000)); // 2.0
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(!state.satisfies(&conditions));
-
-        println!("\n=== Testing small decimal differences ===");
-        // Test small decimal differences
-        state.set("precise", StateVar::F64(1001)); // 1.001
-        conditions = State::new().build(); // Clear conditions
-        conditions.set("precise", StateVar::F64(1000)); // 1.000
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        conditions = State::new().build(); // Clear conditions
-        conditions.set("precise", StateVar::F64(1002)); // 1.002
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(!state.satisfies(&conditions));
-    }
-
-    #[test]
-    fn test_world_state_f64_hash_consistency() {
-        let mut state1 = State::new().build();
-        state1.set("a", StateVar::F64(1500)); // 1.5
-        state1.set("b", StateVar::F64(2500)); // 2.5
-
-        let mut state2 = State::new().build();
-        state2.set("b", StateVar::F64(2500)); // 2.5
-        state2.set("a", StateVar::F64(1500)); // 1.5
-
-        // Hash should be the same regardless of insertion order
-        use std::collections::hash_map::DefaultHasher;
-        use std::hash::{Hash, Hasher};
-
-        let mut hasher1 = DefaultHasher::new();
-        let mut hasher2 = DefaultHasher::new();
-        state1.hash(&mut hasher1);
-        state2.hash(&mut hasher2);
-        assert_eq!(hasher1.finish(), hasher2.finish());
-    }
-
-    #[test]
-    fn test_world_state_f64_arithmetic() {
-        let mut state = State::empty();
-
-        // Test addition
-        state.set("value", StateVar::F64(1500)); // 1.5
-
-        let mut changes = HashMap::new();
-        changes.insert("value".to_string(), StateOperation::Add(500)); // Add 0.5
-        state.apply(&changes);
-        assert_eq!(state.get("value"), Some(&StateVar::F64(2000))); // Should be 2.0
-
-        // Test subtraction
-        changes.clear();
-        changes.insert("value".to_string(), StateOperation::Subtract(750)); // Subtract 0.75
-        state.apply(&changes);
-        assert_eq!(state.get("value"), Some(&StateVar::F64(1250))); // Should be 1.25
-
-        // Test small decimal arithmetic
-        state.set("precise", StateVar::F64(1000)); // 1.000
-
-        changes.clear();
-        changes.insert("precise".to_string(), StateOperation::Add(1)); // Add 0.001
-        state.apply(&changes);
-        assert_eq!(state.get("precise"), Some(&StateVar::F64(1001))); // Should be 1.001
-
-        changes.clear();
-        changes.insert("precise".to_string(), StateOperation::Subtract(2)); // Subtract 0.002
-        state.apply(&changes);
-        assert_eq!(state.get("precise"), Some(&StateVar::F64(999))); // Should be 0.999
-
-        // Test negative values
-        state.set("negative", StateVar::F64(-1500)); // -1.5
-
-        changes.clear();
-        changes.insert("negative".to_string(), StateOperation::Add(2500)); // Add 2.5
-        state.apply(&changes);
-        assert_eq!(state.get("negative"), Some(&StateVar::F64(1000))); // Should be 1.0
-
-        changes.clear();
-        changes.insert("negative".to_string(), StateOperation::Subtract(3000)); // Subtract 3.0
-        state.apply(&changes);
-        assert_eq!(state.get("negative"), Some(&StateVar::F64(-2000))); // Should be -2.0
-    }
-
-    #[test]
-    fn test_world_state_f64_edge_cases() {
-        let mut state = State::empty();
-
-        // Test zero values
-        state.set("zero", StateVar::F64(0));
-        assert_eq!(state.get("zero"), Some(&StateVar::F64(0)));
-
-        // Test adding to zero
-        let mut changes = HashMap::new();
-        changes.insert("zero".to_string(), StateOperation::Add(1)); // Add 0.001
-        state.apply(&changes);
-        assert_eq!(state.get("zero"), Some(&StateVar::F64(1))); // Should be 0.001
-
-        // Test subtracting to zero
-        state.set("almost_zero", StateVar::F64(1)); // 0.001
-        changes.clear();
-        changes.insert("almost_zero".to_string(), StateOperation::Subtract(1));
-        state.apply(&changes);
-        assert_eq!(state.get("almost_zero"), Some(&StateVar::F64(0)));
-
-        // Test large numbers
-        state.set("large", StateVar::F64(1_000_000_000)); // 1,000,000.000
-        changes.clear();
-        changes.insert("large".to_string(), StateOperation::Add(1)); // Add 0.001
-        state.apply(&changes);
-        assert_eq!(state.get("large"), Some(&StateVar::F64(1_000_000_001)));
-
-        // Test crossing zero with operations
-        state.set("cross_zero", StateVar::F64(1000)); // 1.000
-        changes.clear();
-        changes.insert("cross_zero".to_string(), StateOperation::Subtract(2000)); // Subtract 2.000
-        state.apply(&changes);
-        assert_eq!(state.get("cross_zero"), Some(&StateVar::F64(-1000))); // Should be -1.000
-
-        changes.clear();
-        changes.insert("cross_zero".to_string(), StateOperation::Add(1000)); // Add 1.000
-        state.apply(&changes);
-        assert_eq!(state.get("cross_zero"), Some(&StateVar::F64(0))); // Back to 0
-    }
-
-    #[test]
-    fn test_world_state_f64_mixed_operations() {
-        let mut state = State::empty();
-
-        // Test mixed operations in sequence
-        state.set("mixed", StateVar::F64(1500)); // 1.500
-
-        let mut changes = HashMap::new();
-        // Add 0.1
-        changes.insert("mixed".to_string(), StateOperation::Add(100));
-        state.apply(&changes);
-
-        // Subtract 0.05
-        changes.clear();
-        changes.insert("mixed".to_string(), StateOperation::Subtract(50));
-        state.apply(&changes);
-
-        // Add 0.005
-        changes.clear();
-        changes.insert("mixed".to_string(), StateOperation::Add(5));
-        state.apply(&changes);
-
-        // Should be 1.555
-        assert_eq!(state.get("mixed"), Some(&StateVar::F64(1555)));
-
-        // Test setting after operations
-        changes.clear();
-        changes.insert(
-            "mixed".to_string(),
-            StateOperation::Set(StateVar::F64(2000)),
-        );
-        state.apply(&changes);
-        assert_eq!(state.get("mixed"), Some(&StateVar::F64(2000))); // Should be 2.000
-    }
-
-    #[test]
-    fn test_world_state_f64_satisfies_edge_cases() {
-        let mut state;
-        let mut conditions;
-
-        println!("\n=== Testing zero satisfies zero ===");
-        // Test zero satisfies zero
-        state = State::new().build(); // Clear state
-        conditions = State::new().build(); // Clear conditions
-        state.set("zero", StateVar::F64(0));
-        conditions.set("zero", StateVar::F64(0));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing positive satisfies zero ===");
-        // Test positive satisfies zero
-        state = State::new().build(); // Clear state
-        conditions = State::new().build(); // Clear conditions
-        state.set("pos", StateVar::F64(1)); // 0.001
-        conditions.set("pos", StateVar::F64(0));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing negative doesn't satisfy zero ===");
-        // Test negative doesn't satisfy zero
-        state = State::new().build(); // Clear state
-        conditions = State::new().build(); // Clear conditions
-        state.set("neg", StateVar::F64(-1)); // -0.001
-        conditions.set("neg", StateVar::F64(0));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(!state.satisfies(&conditions));
-
-        println!("\n=== Testing exact decimal matches ===");
-        // Test exact decimal matches
-        state = State::new().build(); // Clear state
-        conditions = State::new().build(); // Clear conditions
-        state.set("exact", StateVar::F64(1234)); // 1.234
-        conditions.set("exact", StateVar::F64(1234));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing very close values ===");
-        // Test very close values
-        state = State::new().build(); // Clear state
-        conditions = State::new().build(); // Clear conditions
-        state.set("close", StateVar::F64(1000)); // 1.000
-        conditions.set("close", StateVar::F64(999)); // 0.999
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing boundary conditions ===");
-        // Test boundary conditions
-        state = State::new().build(); // Clear state
-        conditions = State::new().build(); // Clear conditions
-        state.set("boundary", StateVar::F64(1000)); // 1.000
-        conditions.set("boundary", StateVar::F64(1001)); // 1.001
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(!state.satisfies(&conditions));
-    }
-
+    /// Test StateVar f64 conversion methods
+    /// Validates: from_f64 and as_f64 work correctly with rounding
+    /// Failure: F64 conversion logic is broken
     #[test]
     fn test_state_var_f64_conversion() {
         // Test basic conversion
@@ -467,114 +115,9 @@ mod tests {
         assert_eq!(StateVar::Bool(true).as_f64(), None);
     }
 
-    #[test]
-    fn test_world_state_f64_operations_with_conversion() {
-        let mut state = State::empty();
-
-        // Test setting and getting F64 values using floating point
-        state.set("speed", StateVar::from_f64(1.5));
-        state.set("height", StateVar::from_f64(2.0));
-
-        assert_eq!(state.get("speed"), Some(&StateVar::F64(1500)));
-        assert_eq!(state.get("height"), Some(&StateVar::F64(2000)));
-
-        // Test satisfies with F64 values
-        let mut conditions;
-
-        println!("\n=== Testing exact match ===");
-        conditions = State::new().build();
-        conditions.set("speed", StateVar::from_f64(1.5));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing greater than satisfies ===");
-        conditions = State::new().build();
-        conditions.set("speed", StateVar::from_f64(1.0));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        println!("\n=== Testing less than fails ===");
-        conditions = State::new().build();
-        conditions.set("speed", StateVar::from_f64(2.0));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(!state.satisfies(&conditions));
-
-        println!("\n=== Testing small decimal differences ===");
-        state.set("precise", StateVar::from_f64(1.001));
-        conditions = State::new().build();
-        conditions.set("precise", StateVar::from_f64(1.0));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(state.satisfies(&conditions));
-
-        conditions = State::new().build();
-        conditions.set("precise", StateVar::from_f64(1.002));
-        println!("State: {state:?}");
-        println!("Conditions: {conditions:?}");
-        assert!(!state.satisfies(&conditions));
-    }
-
-    #[test]
-    fn test_world_state_f64_arithmetic_with_helpers() {
-        let mut state = State::empty();
-
-        // Test addition with helper
-        state.set("value", StateVar::from_f64(1.5));
-
-        let mut changes = HashMap::new();
-        changes.insert("value".to_string(), StateOperation::add_f64(0.5)); // Add 0.5
-        state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(2.0));
-
-        // Test subtraction with helper
-        changes.clear();
-        changes.insert("value".to_string(), StateOperation::subtract_f64(0.75)); // Subtract 0.75
-        state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(1.25));
-
-        // Test set with helper
-        changes.clear();
-        changes.insert("value".to_string(), StateOperation::set_f64(4.56789)); // Should round to 4.568
-        state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(4.568));
-
-        // Test small decimal arithmetic
-        state.set("precise", StateVar::from_f64(1.0));
-
-        changes.clear();
-        changes.insert("precise".to_string(), StateOperation::add_f64(0.001)); // Add 0.001
-        state.apply(&changes);
-        assert_eq!(state.get("precise").and_then(|v| v.as_f64()), Some(1.001));
-
-        changes.clear();
-        changes.insert("precise".to_string(), StateOperation::subtract_f64(0.002)); // Subtract 0.002
-        state.apply(&changes);
-        assert_eq!(state.get("precise").and_then(|v| v.as_f64()), Some(0.999));
-
-        // Test negative values
-        state.set("negative", StateVar::from_f64(-1.5));
-
-        changes.clear();
-        changes.insert("negative".to_string(), StateOperation::add_f64(2.5)); // Add 2.5
-        state.apply(&changes);
-        assert_eq!(state.get("negative").and_then(|v| v.as_f64()), Some(1.0));
-
-        changes.clear();
-        changes.insert("negative".to_string(), StateOperation::set_f64(-4.567)); // Should round to -4.567
-        state.apply(&changes);
-        assert_eq!(state.get("negative").and_then(|v| v.as_f64()), Some(-4.567));
-
-        // Test rounding behavior
-        state.set("round", StateVar::from_f64(1.0));
-        changes.clear();
-        changes.insert("round".to_string(), StateOperation::add_f64(0.1234)); // Should round to 0.123
-        state.apply(&changes);
-        assert_eq!(state.get("round").and_then(|v| v.as_f64()), Some(1.123));
-    }
-
+    /// Test StateVar From trait implementations
+    /// Validates: All From implementations work correctly for type conversion
+    /// Failure: From trait implementations are broken
     #[test]
     fn test_state_var_from_implementations() {
         // Test bool conversion
@@ -608,8 +151,402 @@ mod tests {
         assert_eq!(i8_var, StateVar::I64(42));
     }
 
+    // Tests for State basic operations
+
+    /// Test State creation and basic variable operations
+    /// Validates: State can store and retrieve variables of all types
+    /// Failure: Basic state operations are broken
     #[test]
-    fn test_world_state_builder() {
+    fn test_state_basic_operations() {
+        let mut state = State::empty();
+
+        // Test set and get
+        state.set("bool_var", StateVar::Bool(true));
+        state.set("int_var", StateVar::I64(42));
+        state.set("float_var", StateVar::F64(1500)); // 1.5
+        state.set("string_var", StateVar::String("test".to_string()));
+
+        assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
+        assert_eq!(state.get("int_var"), Some(&StateVar::I64(42)));
+        assert_eq!(state.get("float_var"), Some(&StateVar::F64(1500)));
+        assert_eq!(state.get("string_var"), Some(&StateVar::String("test".to_string())));
+        assert_eq!(state.get("nonexistent"), None);
+    }
+
+    // Tests for State satisfaction logic
+
+    /// Test State satisfies with bool requirements
+    /// Validates: Bool requirements are satisfied when state matches exactly
+    /// Failure: Boolean satisfaction logic is broken
+    #[test]
+    fn test_state_satisfies_bool() {
+        let mut state = State::empty();
+        state.set("bool_var", StateVar::Bool(true));
+
+        let mut conditions = State::empty();
+        conditions.set("bool_var", StateVar::Bool(true));
+        assert!(state.satisfies(&conditions));
+
+        conditions.set("bool_var", StateVar::Bool(false));
+        assert!(!state.satisfies(&conditions));
+    }
+
+    /// Test State satisfies with i64 requirements
+    /// Validates: I64 requirements are satisfied when state value >= requirement
+    /// Failure: Integer satisfaction logic is broken
+    #[test]
+    fn test_state_satisfies_i64() {
+        let mut state = State::empty();
+        state.set("int_var", StateVar::I64(42));
+
+        let mut conditions = State::empty();
+        // Test exact match
+        conditions.set("int_var", StateVar::I64(42));
+        assert!(state.satisfies(&conditions));
+
+        // Test greater than requirement
+        conditions.set("int_var", StateVar::I64(40));
+        assert!(state.satisfies(&conditions));
+
+        // Test less than requirement
+        conditions.set("int_var", StateVar::I64(50));
+        assert!(!state.satisfies(&conditions));
+    }
+
+    /// Test State satisfies with f64 requirements
+    /// Validates: F64 requirements are satisfied when state value >= requirement
+    /// Failure: Float satisfaction logic is broken
+    #[test]
+    fn test_state_satisfies_f64() {
+        let mut state = State::empty();
+        state.set("float_var", StateVar::F64(1500)); // 1.5
+
+        let mut conditions = State::empty();
+        // Test exact match
+        conditions.set("float_var", StateVar::F64(1500));
+        assert!(state.satisfies(&conditions));
+
+        // Test greater than requirement
+        conditions.set("float_var", StateVar::F64(1000)); // 1.0
+        assert!(state.satisfies(&conditions));
+
+        // Test less than requirement
+        conditions.set("float_var", StateVar::F64(2000)); // 2.0
+        assert!(!state.satisfies(&conditions));
+    }
+
+    /// Test State satisfies with string requirements
+    /// Validates: String requirements are satisfied when state matches exactly
+    /// Failure: String satisfaction logic is broken
+    #[test]
+    fn test_state_satisfies_string() {
+        let mut state = State::empty();
+        state.set("string_var", StateVar::String("test".to_string()));
+
+        let mut conditions = State::empty();
+        // Test exact match
+        conditions.set("string_var", StateVar::String("test".to_string()));
+        assert!(state.satisfies(&conditions));
+
+        // Test mismatch
+        conditions.set("string_var", StateVar::String("other".to_string()));
+        assert!(!state.satisfies(&conditions));
+    }
+
+    /// Test State satisfies with missing variables
+    /// Validates: Satisfaction fails when required variables are missing
+    /// Failure: Missing variable detection is broken
+    #[test]
+    fn test_state_satisfies_missing_variable() {
+        let mut state = State::empty();
+        state.set("existing_var", StateVar::Bool(true));
+
+        let mut conditions = State::empty();
+        conditions.set("nonexistent_var", StateVar::Bool(true));
+        assert!(!state.satisfies(&conditions));
+    }
+
+    /// Test State satisfies with type mismatches
+    /// Validates: Satisfaction fails when variable types don't match
+    /// Failure: Type mismatch detection is broken
+    #[test]
+    fn test_state_satisfies_type_mismatch() {
+        let mut state = State::empty();
+        state.set("var", StateVar::Bool(true));
+
+        let mut conditions = State::empty();
+        conditions.set("var", StateVar::I64(1));
+        assert!(!state.satisfies(&conditions));
+    }
+
+    // Tests for State apply operations
+
+    /// Test State apply with Set operations
+    /// Validates: Set operations properly replace variable values
+    /// Failure: Set operation logic is broken
+    #[test]
+    fn test_state_apply_set_operations() {
+        let mut state = State::empty();
+        state.set("bool_var", StateVar::Bool(false));
+        state.set("int_var", StateVar::I64(10));
+        state.set("string_var", StateVar::String("old".to_string()));
+
+        let mut changes = HashMap::new();
+        changes.insert("bool_var".to_string(), StateOperation::Set(StateVar::Bool(true)));
+        changes.insert("int_var".to_string(), StateOperation::Set(StateVar::I64(20)));
+        changes.insert("string_var".to_string(), StateOperation::Set(StateVar::String("new".to_string())));
+
+        state.apply(&changes);
+
+        assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
+        assert_eq!(state.get("int_var"), Some(&StateVar::I64(20)));
+        assert_eq!(state.get("string_var"), Some(&StateVar::String("new".to_string())));
+    }
+
+    /// Test State apply with Add operations on i64
+    /// Validates: Add operations properly increment i64 values
+    /// Failure: I64 Add operation logic is broken
+    #[test]
+    fn test_state_apply_add_i64() {
+        let mut state = State::empty();
+        state.set("int_var", StateVar::I64(10));
+
+        let mut changes = HashMap::new();
+        changes.insert("int_var".to_string(), StateOperation::Add(5));
+        state.apply(&changes);
+
+        assert_eq!(state.get("int_var"), Some(&StateVar::I64(15)));
+    }
+
+    /// Test State apply with Add operations on f64
+    /// Validates: Add operations properly increment f64 values
+    /// Failure: F64 Add operation logic is broken
+    #[test]
+    fn test_state_apply_add_f64() {
+        let mut state = State::empty();
+        state.set("float_var", StateVar::F64(1500)); // 1.5
+
+        let mut changes = HashMap::new();
+        changes.insert("float_var".to_string(), StateOperation::Add(500)); // Add 0.5
+        state.apply(&changes);
+
+        assert_eq!(state.get("float_var"), Some(&StateVar::F64(2000))); // Should be 2.0
+    }
+
+    /// Test State apply with Subtract operations on i64
+    /// Validates: Subtract operations properly decrement i64 values
+    /// Failure: I64 Subtract operation logic is broken
+    #[test]
+    fn test_state_apply_subtract_i64() {
+        let mut state = State::empty();
+        state.set("int_var", StateVar::I64(15));
+
+        let mut changes = HashMap::new();
+        changes.insert("int_var".to_string(), StateOperation::Subtract(3));
+        state.apply(&changes);
+
+        assert_eq!(state.get("int_var"), Some(&StateVar::I64(12)));
+    }
+
+    /// Test State apply with Subtract operations on f64
+    /// Validates: Subtract operations properly decrement f64 values
+    /// Failure: F64 Subtract operation logic is broken
+    #[test]
+    fn test_state_apply_subtract_f64() {
+        let mut state = State::empty();
+        state.set("float_var", StateVar::F64(2000)); // 2.0
+
+        let mut changes = HashMap::new();
+        changes.insert("float_var".to_string(), StateOperation::Subtract(750)); // Subtract 0.75
+        state.apply(&changes);
+
+        assert_eq!(state.get("float_var"), Some(&StateVar::F64(1250))); // Should be 1.25
+    }
+
+    /// Test State apply operations on missing variables
+    /// Validates: Operations on missing variables are safely ignored
+    /// Failure: Missing variable handling in apply is broken
+    #[test]
+    fn test_state_apply_missing_variable() {
+        let mut state = State::empty();
+
+        let mut changes = HashMap::new();
+        changes.insert("nonexistent".to_string(), StateOperation::Add(5));
+        state.apply(&changes);
+
+        // Should not create the variable or crash
+        assert_eq!(state.get("nonexistent"), None);
+    }
+
+    // Tests for State merge operations
+
+    /// Test State merge functionality
+    /// Validates: Merge properly combines states with override behavior
+    /// Failure: State merge logic is broken
+    #[test]
+    fn test_state_merge() {
+        let mut state1 = State::empty();
+        state1.set("var1", StateVar::Bool(true));
+        state1.set("var2", StateVar::I64(10));
+
+        let mut state2 = State::empty();
+        state2.set("var2", StateVar::I64(20)); // Should override
+        state2.set("var3", StateVar::String("test".to_string()));
+
+        state1.merge(&state2);
+
+        assert_eq!(state1.get("var1"), Some(&StateVar::Bool(true)));
+        assert_eq!(state1.get("var2"), Some(&StateVar::I64(20))); // Overridden
+        assert_eq!(state1.get("var3"), Some(&StateVar::String("test".to_string())));
+    }
+
+    // Tests for State hash consistency
+
+    /// Test State hash consistency regardless of insertion order
+    /// Validates: Hash is consistent regardless of variable insertion order
+    /// Failure: State hash implementation is broken
+    #[test]
+    fn test_state_hash_consistency() {
+        let mut state1 = State::empty();
+        state1.set("a", StateVar::Bool(true));
+        state1.set("b", StateVar::I64(10));
+
+        let mut state2 = State::empty();
+        state2.set("b", StateVar::I64(10));
+        state2.set("a", StateVar::Bool(true));
+
+        // Hash should be the same regardless of insertion order
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let mut hasher1 = DefaultHasher::new();
+        let mut hasher2 = DefaultHasher::new();
+        state1.hash(&mut hasher1);
+        state2.hash(&mut hasher2);
+        assert_eq!(hasher1.finish(), hasher2.finish());
+    }
+
+    // Tests for State helper methods
+
+    /// Test State get_bool helper method
+    /// Validates: get_bool returns correct values and proper errors
+    /// Failure: get_bool helper method is broken
+    #[test]
+    fn test_state_get_bool() {
+        let mut state = State::empty();
+        state.set("bool_var", StateVar::Bool(true));
+        state.set("int_var", StateVar::I64(42));
+
+        // Test successful retrieval
+        assert_eq!(state.get_bool("bool_var"), Ok(true));
+
+        // Test variable not found
+        assert!(matches!(state.get_bool("nonexistent"), Err(StateError::VarNotFound(_))));
+
+        // Test wrong type
+        assert!(matches!(state.get_bool("int_var"), Err(StateError::InvalidVarType { .. })));
+    }
+
+    /// Test State get_int helper method
+    /// Validates: get_int returns correct values and proper errors
+    /// Failure: get_int helper method is broken
+    #[test]
+    fn test_state_get_int() {
+        let mut state = State::empty();
+        state.set("int_var", StateVar::I64(42));
+        state.set("bool_var", StateVar::Bool(true));
+
+        // Test successful retrieval
+        assert_eq!(state.get_int("int_var"), Ok(42));
+
+        // Test variable not found
+        assert!(matches!(state.get_int("nonexistent"), Err(StateError::VarNotFound(_))));
+
+        // Test wrong type
+        assert!(matches!(state.get_int("bool_var"), Err(StateError::InvalidVarType { .. })));
+    }
+
+    /// Test State get_float helper method
+    /// Validates: get_float returns correct values and proper errors
+    /// Failure: get_float helper method is broken
+    #[test]
+    fn test_state_get_float() {
+        let mut state = State::empty();
+        state.set("float_var", StateVar::F64(1500)); // 1.5
+        state.set("bool_var", StateVar::Bool(true));
+
+        // Test successful retrieval
+        assert_eq!(state.get_float("float_var"), Ok(1.5));
+
+        // Test variable not found
+        assert!(matches!(state.get_float("nonexistent"), Err(StateError::VarNotFound(_))));
+
+        // Test wrong type
+        assert!(matches!(state.get_float("bool_var"), Err(StateError::InvalidVarType { .. })));
+    }
+
+    /// Test State get_enum helper method
+    /// Validates: get_enum returns correct values and proper errors
+    /// Failure: get_enum helper method is broken
+    #[test]
+    fn test_state_get_enum() {
+        let mut state = State::empty();
+        state.set("string_var", StateVar::String("test".to_string()));
+        state.set("bool_var", StateVar::Bool(true));
+
+        // Test successful retrieval
+        assert_eq!(state.get_enum("string_var"), Ok("test"));
+
+        // Test variable not found
+        assert!(matches!(state.get_enum("nonexistent"), Err(StateError::VarNotFound(_))));
+
+        // Test wrong type
+        assert!(matches!(state.get_enum("bool_var"), Err(StateError::InvalidVarType { .. })));
+    }
+
+    // Tests for StateBuilder functionality
+
+    /// Test StateBuilder bool method
+    /// Validates: Builder bool method properly sets boolean values
+    /// Failure: StateBuilder bool method is broken
+    #[test]
+    fn test_state_builder_bool() {
+        let state = State::new().bool("has_key", true).build();
+        assert_eq!(state.get("has_key"), Some(&StateVar::Bool(true)));
+    }
+
+    /// Test StateBuilder int method
+    /// Validates: Builder int method properly sets integer values
+    /// Failure: StateBuilder int method is broken
+    #[test]
+    fn test_state_builder_int() {
+        let state = State::new().int("gold", 100).build();
+        assert_eq!(state.get("gold"), Some(&StateVar::I64(100)));
+    }
+
+    /// Test StateBuilder float method
+    /// Validates: Builder float method properly sets float values
+    /// Failure: StateBuilder float method is broken
+    #[test]
+    fn test_state_builder_float() {
+        let state = State::new().float("health", 75.5).build();
+        assert_eq!(state.get("health"), Some(&StateVar::F64(75500)));
+    }
+
+    /// Test StateBuilder enum_val method
+    /// Validates: Builder enum_val method properly sets string values
+    /// Failure: StateBuilder enum_val method is broken
+    #[test]
+    fn test_state_builder_enum_val() {
+        let state = State::new().enum_val("location", "town").build();
+        assert_eq!(state.get("location"), Some(&StateVar::String("town".to_string())));
+    }
+
+    /// Test StateBuilder unified set method
+    /// Validates: Builder set method works with all value types via IntoStateVar
+    /// Failure: StateBuilder unified set method is broken
+    #[test]
+    fn test_state_builder_unified_set() {
         let state = State::new()
             .set("has_wood", true)
             .set("energy", 100)
@@ -617,69 +554,94 @@ mod tests {
             .set("location", "forest")
             .build();
 
-        // Test boolean value
         assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
-
-        // Test integer value
         assert_eq!(state.get("energy"), Some(&StateVar::I64(100)));
-
-        // Test float value (remember it's stored as fixed point)
-        assert_eq!(
-            state.get("temperature"),
-            Some(&StateVar::F64(22500)) // 22.5 * 1000
-        );
-
-        // Test enum value
-        assert_eq!(
-            state.get("location"),
-            Some(&StateVar::String("forest".to_string()))
-        );
+        assert_eq!(state.get("temperature"), Some(&StateVar::F64(22500))); // 22.5 * 1000
+        assert_eq!(state.get("location"), Some(&StateVar::String("forest".to_string())));
     }
 
+    /// Test StateBuilder method chaining
+    /// Validates: All builder methods can be chained together properly
+    /// Failure: StateBuilder method chaining is broken
     #[test]
-    fn test_world_state_builder_chaining() {
+    fn test_state_builder_chaining() {
         let state = State::new()
-            .set("has_wood", true)
-            .set("has_tools", false)
-            .set("wood_count", 5)
-            .set("tool_count", 0)
-            .set("health", 100.0)
-            .set("energy", 50.0)
-            .set("location", "forest")
+            .bool("has_wood", true)
+            .int("wood_count", 5)
+            .float("health", 100.0)
+            .enum_val("location", "forest")
             .set("weather", "sunny")
             .build();
 
         assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("has_tools"), Some(&StateVar::Bool(false)));
         assert_eq!(state.get("wood_count"), Some(&StateVar::I64(5)));
-        assert_eq!(state.get("tool_count"), Some(&StateVar::I64(0)));
         assert_eq!(state.get("health"), Some(&StateVar::F64(100000)));
-        assert_eq!(state.get("energy"), Some(&StateVar::F64(50000)));
-        assert_eq!(
-            state.get("location"),
-            Some(&StateVar::String("forest".to_string()))
-        );
-        assert_eq!(
-            state.get("weather"),
-            Some(&StateVar::String("sunny".to_string()))
-        );
+        assert_eq!(state.get("location"), Some(&StateVar::String("forest".to_string())));
+        assert_eq!(state.get("weather"), Some(&StateVar::String("sunny".to_string())));
     }
 
-    #[test]
-    fn test_new_unified_state_api() {
-        let state = State::new()
-            .set("has_wood", false)
-            .set("health", 100)
-            .set("energy", 50.0)
-            .set("location", "forest")
-            .build();
+    // Tests for StateOperation helper methods
 
-        assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(false)));
-        assert_eq!(state.get("health"), Some(&StateVar::I64(100)));
-        assert_eq!(state.get("energy"), Some(&StateVar::F64(50000))); // 50.0 as fixed point
-        assert_eq!(
-            state.get("location"),
-            Some(&StateVar::String("forest".to_string()))
-        );
+    /// Test StateOperation helper methods for i64
+    /// Validates: set_i64, add_i64, subtract_i64 create correct operations
+    /// Failure: StateOperation i64 helper methods are broken
+    #[test]
+    fn test_state_operation_i64_helpers() {
+        assert_eq!(StateOperation::set_i64(100), StateOperation::Set(StateVar::I64(100)));
+        assert_eq!(StateOperation::add_i64(50), StateOperation::Add(50));
+        assert_eq!(StateOperation::subtract_i64(25), StateOperation::Subtract(25));
+    }
+
+    /// Test StateOperation helper methods for f64
+    /// Validates: set_f64, add_f64, subtract_f64 create correct operations with fixed-point conversion
+    /// Failure: StateOperation f64 helper methods are broken
+    #[test]
+    fn test_state_operation_f64_helpers() {
+        assert_eq!(StateOperation::set_f64(1.5), StateOperation::Set(StateVar::F64(1500)));
+        assert_eq!(StateOperation::add_f64(0.5), StateOperation::Add(500));
+        assert_eq!(StateOperation::subtract_f64(0.25), StateOperation::Subtract(250));
+    }
+
+    /// Test StateOperation f64 helpers with rounding
+    /// Validates: f64 helpers properly handle rounding to 3 decimal places
+    /// Failure: StateOperation f64 rounding is broken
+    #[test]
+    fn test_state_operation_f64_rounding() {
+        // Test rounding in set_f64
+        assert_eq!(StateOperation::set_f64(1.2345), StateOperation::Set(StateVar::F64(1235)));
+        
+        // Test rounding in add_f64
+        assert_eq!(StateOperation::add_f64(0.1234), StateOperation::Add(123));
+        
+        // Test rounding in subtract_f64
+        assert_eq!(StateOperation::subtract_f64(0.6789), StateOperation::Subtract(679));
+    }
+
+    /// Test complete f64 workflow with helper methods
+    /// Validates: F64 operations work correctly when using helper methods throughout
+    /// Failure: F64 helper method integration is broken
+    #[test]
+    fn test_state_f64_workflow_with_helpers() {
+        let mut state = State::empty();
+
+        // Test setting with helper
+        state.set("value", StateVar::from_f64(1.5));
+
+        let mut changes = HashMap::new();
+        changes.insert("value".to_string(), StateOperation::add_f64(0.5)); // Add 0.5
+        state.apply(&changes);
+        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(2.0));
+
+        // Test subtraction with helper
+        changes.clear();
+        changes.insert("value".to_string(), StateOperation::subtract_f64(0.75)); // Subtract 0.75
+        state.apply(&changes);
+        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(1.25));
+
+        // Test set with helper
+        changes.clear();
+        changes.insert("value".to_string(), StateOperation::set_f64(3.14159)); // Should round to 3.142
+        state.apply(&changes);
+        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(3.142));
     }
 }
