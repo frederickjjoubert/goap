@@ -192,24 +192,24 @@ mod tests {
         // Test exact match
         conditions = State::new(); // Clear conditions
         conditions.set("speed", StateVar::F64(1500));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing greater than satisfies ===");
         // Test greater than satisfies
         conditions = State::new(); // Clear conditions
         conditions.set("speed", StateVar::F64(1000)); // 1.0
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing less than fails ===");
         // Test less than fails
         conditions = State::new(); // Clear conditions
         conditions.set("speed", StateVar::F64(2000)); // 2.0
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(!state.satisfies(&conditions));
 
         println!("\n=== Testing small decimal differences ===");
@@ -217,14 +217,14 @@ mod tests {
         state.set("precise", StateVar::F64(1001)); // 1.001
         conditions = State::new(); // Clear conditions
         conditions.set("precise", StateVar::F64(1000)); // 1.000
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         conditions = State::new(); // Clear conditions
         conditions.set("precise", StateVar::F64(1002)); // 1.002
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(!state.satisfies(&conditions));
     }
 
@@ -381,8 +381,8 @@ mod tests {
         conditions = State::new(); // Clear conditions
         state.set("zero", StateVar::F64(0));
         conditions.set("zero", StateVar::F64(0));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing positive satisfies zero ===");
@@ -391,8 +391,8 @@ mod tests {
         conditions = State::new(); // Clear conditions
         state.set("pos", StateVar::F64(1)); // 0.001
         conditions.set("pos", StateVar::F64(0));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing negative doesn't satisfy zero ===");
@@ -401,8 +401,8 @@ mod tests {
         conditions = State::new(); // Clear conditions
         state.set("neg", StateVar::F64(-1)); // -0.001
         conditions.set("neg", StateVar::F64(0));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(!state.satisfies(&conditions));
 
         println!("\n=== Testing exact decimal matches ===");
@@ -411,8 +411,8 @@ mod tests {
         conditions = State::new(); // Clear conditions
         state.set("exact", StateVar::F64(1234)); // 1.234
         conditions.set("exact", StateVar::F64(1234));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing very close values ===");
@@ -421,8 +421,8 @@ mod tests {
         conditions = State::new(); // Clear conditions
         state.set("close", StateVar::F64(1000)); // 1.000
         conditions.set("close", StateVar::F64(999)); // 0.999
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing boundary conditions ===");
@@ -431,8 +431,8 @@ mod tests {
         conditions = State::new(); // Clear conditions
         state.set("boundary", StateVar::F64(1000)); // 1.000
         conditions.set("boundary", StateVar::F64(1001)); // 1.001
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(!state.satisfies(&conditions));
     }
 
@@ -484,36 +484,36 @@ mod tests {
         println!("\n=== Testing exact match ===");
         conditions = State::new();
         conditions.set("speed", StateVar::from_f64(1.5));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing greater than satisfies ===");
         conditions = State::new();
         conditions.set("speed", StateVar::from_f64(1.0));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         println!("\n=== Testing less than fails ===");
         conditions = State::new();
         conditions.set("speed", StateVar::from_f64(2.0));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(!state.satisfies(&conditions));
 
         println!("\n=== Testing small decimal differences ===");
         state.set("precise", StateVar::from_f64(1.001));
         conditions = State::new();
         conditions.set("precise", StateVar::from_f64(1.0));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(state.satisfies(&conditions));
 
         conditions = State::new();
         conditions.set("precise", StateVar::from_f64(1.002));
-        println!("State: {:?}", state);
-        println!("Conditions: {:?}", conditions);
+        println!("State: {state:?}");
+        println!("Conditions: {conditions:?}");
         assert!(!state.satisfies(&conditions));
     }
 
