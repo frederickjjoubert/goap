@@ -26,7 +26,11 @@ impl fmt::Display for Goal {
 }
 
 impl Goal {
-    pub fn new(name: &str, desired_state: State, priority: u16) -> Self {
+    pub fn new(name: &str) -> GoalBuilder {
+        GoalBuilder::new(name)
+    }
+
+    pub fn from_state(name: &str, desired_state: State, priority: u16) -> Self {
         Goal {
             name: name.to_string(),
             desired_state,
@@ -53,7 +57,7 @@ impl GoalBuilder {
     pub fn new(name: &str) -> Self {
         GoalBuilder {
             name: name.to_string(),
-            desired_state: State::new(),
+            desired_state: State::empty(),
             priority: 1,
         }
     }
@@ -81,6 +85,12 @@ impl GoalBuilder {
 
     pub fn require_enum(mut self, key: &str, value: impl Into<String>) -> Self {
         self.desired_state.set(key, StateVar::String(value.into()));
+        self
+    }
+
+    /// Unified method to require any value type
+    pub fn requires<T: Into<StateVar>>(mut self, key: &str, value: T) -> Self {
+        self.desired_state.set(key, value.into());
         self
     }
 

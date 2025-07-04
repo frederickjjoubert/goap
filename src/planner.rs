@@ -196,8 +196,8 @@ mod tests {
 
     #[test]
     fn test_node_wrapper_ordering() {
-        let state1 = State::new();
-        let state2 = State::new();
+        let state1 = State::empty();
+        let state2 = State::empty();
 
         let node1 = NodeWrapper {
             node: state1,

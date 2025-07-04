@@ -39,11 +39,11 @@ impl fmt::Display for Action {
 }
 
 impl Action {
-    pub fn builder(name: &str) -> ActionBuilder {
+    pub fn new(name: &str) -> ActionBuilder {
         ActionBuilder::new(name)
     }
 
-    pub fn new(
+    pub fn from_parts(
         name: &str,
         cost: f64,
         preconditions: State,
@@ -55,6 +55,10 @@ impl Action {
             preconditions,
             effects,
         }
+    }
+
+    pub fn builder(name: &str) -> ActionBuilder {
+        ActionBuilder::new(name)
     }
 
     pub fn can_execute(&self, state: &State) -> bool {
@@ -80,7 +84,7 @@ impl ActionBuilder {
         ActionBuilder {
             name: name.to_string(),
             cost: 1.0, // Default cost
-            preconditions: State::new(),
+            preconditions: State::empty(),
             effects: HashMap::new(),
         }
     }
@@ -125,6 +129,26 @@ impl ActionBuilder {
         self
     }
 
+    /// Shorter alias for precondition
+    pub fn has<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
+        self.precondition(key, value)
+    }
+
+    /// Shorter alias for effect_set_to
+    pub fn sets<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
+        self.effect_set_to(key, value)
+    }
+
+    /// Add value - works with both integers and floats
+    pub fn adds<T: NumericValue>(self, key: &str, value: T) -> Self {
+        value.add_to_action_builder(self, key)
+    }
+
+    /// Subtract value - works with both integers and floats  
+    pub fn subtracts<T: NumericValue>(self, key: &str, value: T) -> Self {
+        value.subtract_from_action_builder(self, key)
+    }
+
     pub fn build(self) -> Action {
         Action {
             name: self.name,
@@ -132,5 +156,51 @@ impl ActionBuilder {
             preconditions: self.preconditions,
             effects: self.effects,
         }
+    }
+}
+
+// Trait for values that can be added/subtracted
+pub trait NumericValue {
+    fn add_to_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder;
+    fn subtract_from_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder;
+}
+
+impl NumericValue for i64 {
+    fn add_to_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_add_int(key, self)
+    }
+
+    fn subtract_from_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_subtract_int(key, self)
+    }
+}
+
+impl NumericValue for f64 {
+    fn add_to_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_add_float(key, self)
+    }
+
+    fn subtract_from_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_subtract_float(key, self)
+    }
+}
+
+impl NumericValue for i32 {
+    fn add_to_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_add_int(key, self as i64)
+    }
+
+    fn subtract_from_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_subtract_int(key, self as i64)
+    }
+}
+
+impl NumericValue for f32 {
+    fn add_to_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_add_float(key, self as f64)
+    }
+
+    fn subtract_from_action_builder(self, builder: ActionBuilder, key: &str) -> ActionBuilder {
+        builder.effect_subtract_float(key, self as f64)
     }
 }

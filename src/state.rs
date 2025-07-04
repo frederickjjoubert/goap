@@ -57,12 +57,16 @@ impl Hash for State {
 
 impl Default for State {
     fn default() -> Self {
-        Self::new()
+        Self::empty()
     }
 }
 
 impl State {
-    pub fn new() -> Self {
+    pub fn new() -> StateBuilder {
+        StateBuilder::new()
+    }
+
+    pub fn empty() -> Self {
         State {
             vars: HashMap::new(),
         }
@@ -230,6 +234,12 @@ impl StateBuilder {
         self
     }
 
+    /// Unified method to set any value type
+    pub fn set<T: Into<StateVar>>(mut self, key: &str, value: T) -> Self {
+        self.vars.insert(key.to_string(), value.into());
+        self
+    }
+
     pub fn build(self) -> State {
         State { vars: self.vars }
     }
@@ -266,7 +276,7 @@ pub enum StateVar {
     /// ```rust
     /// # use std::collections::HashMap;
     /// # use goap::prelude::*;
-    /// # let mut state = State::new();
+    /// # let mut state = State::empty();
     /// # state.set("value", StateVar::from_f64(1.5));
     /// let mut changes = HashMap::new();
     /// changes.insert("value".to_string(), StateOperation::add_f64(0.5)); // Add 0.5
