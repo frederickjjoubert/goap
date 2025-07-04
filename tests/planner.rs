@@ -76,7 +76,7 @@ mod tests {
         // Action to craft planks
         let craft_planks = Action::new("craft_planks")
             .cost(2.0)
-            .has("has_wood", true)
+            .requires("has_wood", true)
             .sets("has_planks", true)
             .build();
 

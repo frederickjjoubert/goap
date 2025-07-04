@@ -129,12 +129,12 @@ impl ActionBuilder {
         self
     }
 
-    /// Shorter alias for precondition
-    pub fn has<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
+    /// Alias for precondition
+    pub fn requires<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
         self.precondition(key, value)
     }
 
-    /// Shorter alias for effect_set_to
+    /// Alias for effect_set_to
     pub fn sets<T: Into<StateVar>>(self, key: &str, value: T) -> Self {
         self.effect_set_to(key, value)
     }

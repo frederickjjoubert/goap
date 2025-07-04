@@ -68,8 +68,8 @@ mod tests {
     fn test_action_builder() {
         let action = Action::new("test_action")
             .cost(2.5)
-            .has("has_wood", true)
-            .has("energy", 10)
+            .requires("has_wood", true)
+            .requires("energy", 10)
             .sets("has_planks", true)
             .subtracts("energy", 5.0)
             .build();
@@ -100,17 +100,17 @@ mod tests {
     fn test_action_builder_with_numeric_operations() {
         let action = Action::new("complex_action")
             .cost(10.0)
-            .has("has_wood", true)
+            .requires("has_wood", true)
             .sets("has_planks", true)
-            .has("gold", 100)
+            .requires("gold", 100)
             .sets("gold", 200)
             .adds("gold_add", 50)
             .subtracts("items", 1)
-            .has("health", 100.0)
+            .requires("health", 100.0)
             .sets("health", 150.0)
             .adds("speed", 1.5)
             .subtracts("energy", 10.5)
-            .has("location", "forest")
+            .requires("location", "forest")
             .sets("location", "town")
             .build();
 
@@ -183,8 +183,8 @@ mod tests {
     fn test_new_unified_api() {
         let action = Action::new("unified_test")
             .cost(3.0)
-            .has("has_wood", true)
-            .has("energy", 100)
+            .requires("has_wood", true)
+            .requires("energy", 100)
             .sets("has_planks", true)
             .subtracts("energy", 20)
             .subtracts("stamina", 5.5)
