@@ -74,13 +74,10 @@ fn main() {
                 println!("\nStep {step}: {name}");
                 current_state = action.apply_effect(&current_state);
 
-                if let Some(temp) = current_state.get("temperature").and_then(|v| v.as_f64()) {
+                if let Some(temp) = current_state.get::<f64>("temperature") {
                     println!("Temperature: {temp:.1}°C");
                 }
-                if let Some(power) = current_state
-                    .get("power_available")
-                    .and_then(|v| v.as_f64())
-                {
+                if let Some(power) = current_state.get::<f64>("power_available") {
                     println!("Power available: {power:.1}%");
                 }
             }

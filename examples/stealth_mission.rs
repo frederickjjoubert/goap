@@ -150,16 +150,16 @@ fn main() {
         current_state = action.apply_effect(&current_state);
         let name = &action.name;
         println!("After {name}: ");
-        if let Some(StateVar::Bool(detected)) = current_state.get("player_detected") {
+        if let Some(detected) = current_state.get::<bool>("player_detected") {
             println!("  Player Detected: {detected}");
         }
-        if let Some(StateVar::I64(alert)) = current_state.get("guard_alert_level") {
+        if let Some(alert) = current_state.get::<i64>("guard_alert_level") {
             println!("  Guard Alert Level: {alert}");
         }
-        if let Some(StateVar::String(location)) = current_state.get("current_location") {
+        if let Some(location) = current_state.get::<String>("current_location") {
             println!("  Current Location: {location}");
         }
-        if let Some(StateVar::Bool(accessible)) = current_state.get("target_location_accessible") {
+        if let Some(accessible) = current_state.get::<bool>("target_location_accessible") {
             println!("  Target Location Accessible: {accessible}");
         }
     }
@@ -171,26 +171,26 @@ fn main() {
     );
 
     // Verify specific final conditions
-    if let Some(StateVar::Bool(detected)) = current_state.get("player_detected") {
+    if let Some(detected) = current_state.get::<bool>("player_detected") {
         assert!(!detected, "Player should not be detected");
     }
-    if let Some(StateVar::I64(alert)) = current_state.get("guard_alert_level") {
-        assert!(*alert == 0, "Guard alert level should be 0");
+    if let Some(alert) = current_state.get::<i64>("guard_alert_level") {
+        assert!(alert == 0, "Guard alert level should be 0");
     }
-    if let Some(StateVar::String(location)) = current_state.get("current_location") {
+    if let Some(location) = current_state.get::<String>("current_location") {
         assert!(location == "vault", "Should reach the vault");
     }
-    if let Some(StateVar::Bool(accessible)) = current_state.get("target_location_accessible") {
-        assert!(*accessible, "Target location should be accessible");
+    if let Some(accessible) = current_state.get::<bool>("target_location_accessible") {
+        assert!(accessible, "Target location should be accessible");
     }
 
     println!("\nFinal mission state verification:");
-    let location = current_state.get("current_location");
+    let location = current_state.get::<String>("current_location");
     println!("Location: {location:?}");
-    let target_accessible = current_state.get("target_location_accessible");
+    let target_accessible = current_state.get::<bool>("target_location_accessible");
     println!("Target Accessible: {target_accessible:?}");
-    let player_detected = current_state.get("player_detected");
+    let player_detected = current_state.get::<bool>("player_detected");
     println!("Player Detected: {player_detected:?}");
-    let guard_alert_level = current_state.get("guard_alert_level");
+    let guard_alert_level = current_state.get::<i64>("guard_alert_level");
     println!("Guard Alert Level: {guard_alert_level:?}");
 }

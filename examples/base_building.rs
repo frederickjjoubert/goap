@@ -197,16 +197,16 @@ fn main() {
     for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
         println!("After {name}: ", name = action.name);
-        if let Some(StateVar::I64(metal)) = current_state.get("metal") {
+        if let Some(metal) = current_state.get::<i64>("metal") {
             println!("  Metal: {metal}");
         }
-        if let Some(StateVar::I64(energy)) = current_state.get("energy") {
+        if let Some(energy) = current_state.get::<i64>("energy") {
             println!("  Energy: {energy}");
         }
-        if let Some(StateVar::I64(components)) = current_state.get("components") {
+        if let Some(components) = current_state.get::<i64>("components") {
             println!("  Components: {components}");
         }
-        if let Some(StateVar::I64(defense)) = current_state.get("defense_rating") {
+        if let Some(defense) = current_state.get::<i64>("defense_rating") {
             println!("  Defense Rating: {defense}");
         }
     }
@@ -218,31 +218,25 @@ fn main() {
     );
 
     // Verify specific final state conditions
-    if let Some(StateVar::I64(final_defense)) = current_state.get("defense_rating") {
-        assert!(*final_defense >= 75, "Defense rating should be at least 75");
+    if let Some(final_defense) = current_state.get::<i64>("defense_rating") {
+        assert!(final_defense >= 75, "Defense rating should be at least 75");
     }
-    if let Some(StateVar::I64(final_energy)) = current_state.get("energy") {
-        assert!(
-            *final_energy >= 50,
-            "Energy production should be at least 50"
-        );
+    if let Some(final_energy) = current_state.get::<i64>("energy") {
+        assert!(final_energy >= 50, "Energy production should be at least 50");
     }
-    if let Some(StateVar::I64(final_battery)) = current_state.get("battery_charge") {
-        assert!(
-            *final_battery >= 100,
-            "Battery charge should be at least 100"
-        );
+    if let Some(final_battery) = current_state.get::<i64>("battery_charge") {
+        assert!(final_battery >= 100, "Battery charge should be at least 100");
     }
 
     println!("\nFinal base state verification:");
-    let energy_prod = current_state.get("energy");
+    let energy_prod = current_state.get::<i64>("energy");
     println!("Energy Production: {energy_prod:?}");
-    let battery_charge = current_state.get("battery_charge");
+    let battery_charge = current_state.get::<i64>("battery_charge");
     println!("Battery Charge: {battery_charge:?}");
-    let defense_rating = current_state.get("defense_rating");
+    let defense_rating = current_state.get::<i64>("defense_rating");
     println!("Defense Rating: {defense_rating:?}");
-    let has_walls = current_state.get("has_walls");
+    let has_walls = current_state.get::<bool>("has_walls");
     println!("Has Walls: {has_walls:?}");
-    let has_turrets = current_state.get("has_turrets");
+    let has_turrets = current_state.get::<bool>("has_turrets");
     println!("Has Turrets: {has_turrets:?}");
 }

@@ -223,19 +223,19 @@ fn main() {
         println!("After {name}:");
 
         // Note: enum values are stored as strings but we defined them with proper enums
-        if let Some(location) = current_state.get("location") {
+        if let Some(location) = current_state.get::<String>("location") {
             println!("  Location: {location}");
         }
-        if let Some(class) = current_state.get("character_class") {
+        if let Some(class) = current_state.get::<String>("character_class") {
             println!("  Class: {class}");
         }
-        if let Some(quest_status) = current_state.get("dragon_quest") {
+        if let Some(quest_status) = current_state.get::<String>("dragon_quest") {
             println!("  Dragon Quest: {quest_status}");
         }
-        if let Some(StateVar::I64(level)) = current_state.get("level") {
+        if let Some(level) = current_state.get::<i64>("level") {
             println!("  Level: {level}");
         }
-        if let Some(StateVar::I64(gold)) = current_state.get("gold") {
+        if let Some(gold) = current_state.get::<i64>("gold") {
             println!("  Gold: {gold}");
         }
         println!();

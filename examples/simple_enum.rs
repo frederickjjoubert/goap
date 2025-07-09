@@ -107,13 +107,13 @@ fn main() {
         println!("After {name}:");
 
         // Note: enum values are stored as strings but we defined them with proper enums
-        if let Some(location) = current_state.get("location") {
+        if let Some(location) = current_state.get::<String>("location") {
             println!("  Location: {location}");
         }
-        if let Some(StateVar::Bool(has_money)) = current_state.get("has_money") {
+        if let Some(has_money) = current_state.get::<bool>("has_money") {
             println!("  Has Money: {has_money}");
         }
-        if let Some(StateVar::Bool(has_food)) = current_state.get("has_food") {
+        if let Some(has_food) = current_state.get::<bool>("has_food") {
             println!("  Has Food: {has_food}");
         }
         println!();

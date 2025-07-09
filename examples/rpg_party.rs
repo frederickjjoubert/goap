@@ -194,16 +194,16 @@ fn main() {
         let name = &action.name;
         println!("After {name}: ");
         println!("  Gold: {remaining_gold}");
-        if let Some(StateVar::I64(party_size)) = current_state.get("party_size") {
+        if let Some(party_size) = current_state.get::<i64>("party_size") {
             println!("  Party Size: {party_size}");
         }
-        if let Some(StateVar::I64(tank_health)) = current_state.get("tank_health") {
+        if let Some(tank_health) = current_state.get::<i64>("tank_health") {
             println!("  Tank Health: {tank_health}");
         }
-        if let Some(StateVar::I64(tank_armor)) = current_state.get("tank_armor") {
+        if let Some(tank_armor) = current_state.get::<i64>("tank_armor") {
             println!("  Tank Armor: {tank_armor}");
         }
-        if let Some(StateVar::I64(dps_damage)) = current_state.get("dps_damage") {
+        if let Some(dps_damage) = current_state.get::<i64>("dps_damage") {
             println!("  DPS Damage: {dps_damage}");
         }
     }
@@ -217,33 +217,33 @@ fn main() {
     // Verify specific final conditions
     assert!(remaining_gold >= 0, "Should not overspend gold");
 
-    if let Some(StateVar::Bool(has_healer)) = current_state.get("healer_available") {
-        assert!(*has_healer, "Should have recruited a healer");
+    if let Some(has_healer) = current_state.get::<bool>("healer_available") {
+        assert!(has_healer, "Should have recruited a healer");
     }
-    if let Some(StateVar::I64(party_size)) = current_state.get("party_size") {
-        assert!(*party_size == 3, "Party size should be 3");
+    if let Some(party_size) = current_state.get::<i64>("party_size") {
+        assert!(party_size == 3, "Party size should be 3");
     }
-    if let Some(StateVar::Bool(tank_poisoned)) = current_state.get("tank_poisoned") {
-        assert!(!*tank_poisoned, "Tank should not be poisoned");
+    if let Some(tank_poisoned) = current_state.get::<bool>("tank_poisoned") {
+        assert!(!tank_poisoned, "Tank should not be poisoned");
     }
-    if let Some(StateVar::Bool(dps_cursed)) = current_state.get("dps_cursed") {
-        assert!(!*dps_cursed, "DPS should not be cursed");
+    if let Some(dps_cursed) = current_state.get::<bool>("dps_cursed") {
+        assert!(!dps_cursed, "DPS should not be cursed");
     }
 
     println!("\nFinal party state verification:");
-    let party_size = current_state.get("party_size");
+    let party_size = current_state.get::<i64>("party_size");
     println!("Party Size: {party_size:?}");
-    let tank_health = current_state.get("tank_health");
+    let tank_health = current_state.get::<i64>("tank_health");
     println!("Tank Health: {tank_health:?}");
-    let tank_armor = current_state.get("tank_armor");
+    let tank_armor = current_state.get::<i64>("tank_armor");
     println!("Tank Armor: {tank_armor:?}");
-    let tank_poisoned = current_state.get("tank_poisoned");
+    let tank_poisoned = current_state.get::<bool>("tank_poisoned");
     println!("Tank Poisoned: {tank_poisoned:?}");
-    let dps_damage = current_state.get("dps_damage");
+    let dps_damage = current_state.get::<i64>("dps_damage");
     println!("DPS Damage: {dps_damage:?}");
-    let dps_cursed = current_state.get("dps_cursed");
+    let dps_cursed = current_state.get::<bool>("dps_cursed");
     println!("DPS Cursed: {dps_cursed:?}");
-    let healer_available = current_state.get("healer_available");
+    let healer_available = current_state.get::<bool>("healer_available");
     println!("Healer Available: {healer_available:?}");
     println!("Remaining Gold: {remaining_gold}");
 }

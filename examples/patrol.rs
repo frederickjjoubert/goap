@@ -172,19 +172,19 @@ fn main() {
         current_state = action.apply_effect(&current_state);
         let name = &action.name;
         println!("After {name}: ");
-        if let Some(StateVar::Bool(at_base)) = current_state.get("at_base") {
+        if let Some(at_base) = current_state.get::<bool>("at_base") {
             println!("  At Base: {at_base}");
         }
-        if let Some(StateVar::Bool(has_radio)) = current_state.get("has_radio") {
+        if let Some(has_radio) = current_state.get::<bool>("has_radio") {
             println!("  Has Radio: {has_radio}");
         }
-        if let Some(StateVar::Bool(reported_a)) = current_state.get("reported_at_a") {
+        if let Some(reported_a) = current_state.get::<bool>("reported_at_a") {
             println!("  Reported at A: {reported_a}");
         }
-        if let Some(StateVar::Bool(reported_b)) = current_state.get("reported_at_b") {
+        if let Some(reported_b) = current_state.get::<bool>("reported_at_b") {
             println!("  Reported at B: {reported_b}");
         }
-        if let Some(StateVar::Bool(reported_c)) = current_state.get("reported_at_c") {
+        if let Some(reported_c) = current_state.get::<bool>("reported_at_c") {
             println!("  Reported at C: {reported_c}");
         }
     }
@@ -196,31 +196,31 @@ fn main() {
     );
 
     // Verify specific final conditions
-    if let Some(StateVar::Bool(at_base)) = current_state.get("at_base") {
-        assert!(*at_base, "Guard should end at base");
+    if let Some(at_base) = current_state.get::<bool>("at_base") {
+        assert!(at_base, "Guard should end at base");
     }
-    if let Some(StateVar::Bool(has_radio)) = current_state.get("has_radio") {
-        assert!(*has_radio, "Guard should have radio");
+    if let Some(has_radio) = current_state.get::<bool>("has_radio") {
+        assert!(has_radio, "Guard should have radio");
     }
-    if let Some(StateVar::Bool(reported_a)) = current_state.get("reported_at_a") {
-        assert!(*reported_a, "Guard should have reported at point A");
+    if let Some(reported_a) = current_state.get::<bool>("reported_at_a") {
+        assert!(reported_a, "Guard should have reported at point A");
     }
-    if let Some(StateVar::Bool(reported_b)) = current_state.get("reported_at_b") {
-        assert!(*reported_b, "Guard should have reported at point B");
+    if let Some(reported_b) = current_state.get::<bool>("reported_at_b") {
+        assert!(reported_b, "Guard should have reported at point B");
     }
-    if let Some(StateVar::Bool(reported_c)) = current_state.get("reported_at_c") {
-        assert!(*reported_c, "Guard should have reported at point C");
+    if let Some(reported_c) = current_state.get::<bool>("reported_at_c") {
+        assert!(reported_c, "Guard should have reported at point C");
     }
 
     println!("\nFinal patrol state verification:");
-    let at_base = current_state.get("at_base");
+    let at_base = current_state.get::<bool>("at_base");
     println!("At Base: {at_base:?}");
-    let has_radio = current_state.get("has_radio");
+    let has_radio = current_state.get::<bool>("has_radio");
     println!("Has Radio: {has_radio:?}");
-    let reported_at_a = current_state.get("reported_at_a");
+    let reported_at_a = current_state.get::<bool>("reported_at_a");
     println!("Reported at A: {reported_at_a:?}");
-    let reported_at_b = current_state.get("reported_at_b");
+    let reported_at_b = current_state.get::<bool>("reported_at_b");
     println!("Reported at B: {reported_at_b:?}");
-    let reported_at_c = current_state.get("reported_at_c");
+    let reported_at_c = current_state.get::<bool>("reported_at_c");
     println!("Reported at C: {reported_at_c:?}");
 }

@@ -205,31 +205,31 @@ fn main() {
                 println!("\nStep {step}: {name}");
                 current_state = action.apply_effect(&current_state);
 
-                if let Some(StateVar::I64(gold)) = current_state.get("gold") {
+                if let Some(gold) = current_state.get::<i64>("gold") {
                     println!("Gold: {gold}");
                 }
-                if let Some(StateVar::I64(profit)) = current_state.get("total_profit") {
+                if let Some(profit) = current_state.get::<i64>("total_profit") {
                     println!("Profit: {profit}");
                 }
-                if let Some(StateVar::I64(reputation)) = current_state.get("reputation") {
+                if let Some(reputation) = current_state.get::<i64>("reputation") {
                     println!("Reputation: {reputation}");
                 }
-                if let Some(StateVar::I64(routes)) = current_state.get("trade_routes") {
+                if let Some(routes) = current_state.get::<i64>("trade_routes") {
                     println!("Trade Routes: {routes}");
                 }
 
-                if let Some(StateVar::Bool(guild)) = current_state.get("has_guild_membership") {
-                    if *guild {
+                if let Some(guild) = current_state.get::<bool>("has_guild_membership") {
+                    if guild {
                         println!("Guild Member: Yes");
                     }
                 }
-                if let Some(StateVar::Bool(caravan)) = current_state.get("has_caravan") {
-                    if *caravan {
+                if let Some(caravan) = current_state.get::<bool>("has_caravan") {
+                    if caravan {
                         println!("Has Caravan: Yes");
                     }
                 }
-                if let Some(StateVar::Bool(warehouse)) = current_state.get("has_warehouse") {
-                    if *warehouse {
+                if let Some(warehouse) = current_state.get::<bool>("has_warehouse") {
+                    if warehouse {
                         println!("Has Warehouse: Yes");
                     }
                 }

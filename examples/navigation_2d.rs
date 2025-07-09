@@ -95,24 +95,14 @@ fn main() {
     // Simulate plan execution
     let mut current_state = initial_state;
     println!("\nSimulating plan execution:");
-    let x = if let Some(StateVar::I64(x)) = current_state.get("x") {
-        *x
-    } else {
-        0_i64
-    };
-    let y = if let Some(StateVar::I64(y)) = current_state.get("y") {
-        *y
-    } else {
-        0_i64
-    };
+    let x = current_state.get::<i64>("x").unwrap_or(0);
+    let y = current_state.get::<i64>("y").unwrap_or(0);
     println!("Starting at ({x}, {y})");
 
     for action in &plan.actions {
         current_state = action.apply_effect(&current_state);
 
-        if let (Some(StateVar::I64(x)), Some(StateVar::I64(y))) =
-            (current_state.get("x"), current_state.get("y"))
-        {
+        if let (Some(x), Some(y)) = (current_state.get::<i64>("x"), current_state.get::<i64>("y")) {
             let name = &action.name;
             println!("- {name} -> Position: ({x}, {y})");
         }
@@ -123,7 +113,7 @@ fn main() {
             println!("  Package delivered!");
         }
 
-        if let Some(StateVar::I64(battery)) = current_state.get("battery") {
+        if let Some(battery) = current_state.get::<i64>("battery") {
             println!("  Battery: {battery}");
         }
     }

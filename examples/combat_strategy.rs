@@ -162,8 +162,8 @@ fn main() {
         current_state = action.apply_effect(&current_state);
 
         // Track credits spent
-        if let Some(StateVar::I64(credits)) = current_state.get("has_credits") {
-            total_credits = *credits;
+        if let Some(credits) = current_state.get::<i64>("has_credits") {
+            total_credits = credits;
         }
     }
 
@@ -181,13 +181,13 @@ fn main() {
 
     println!("\nFinal state verification:");
     println!("Remaining credits: {total_credits}");
-    if let Some(StateVar::I64(health)) = current_state.get("health") {
+    if let Some(health) = current_state.get::<i64>("health") {
         println!("Final health: {health}");
     }
-    if let Some(StateVar::I64(armor)) = current_state.get("armor") {
+    if let Some(armor) = current_state.get::<i64>("armor") {
         println!("Final armor: {armor}");
     }
-    if let Some(StateVar::I64(ammo)) = current_state.get("ammo") {
+    if let Some(ammo) = current_state.get::<i64>("ammo") {
         println!("Final ammo: {ammo}");
     }
 }
