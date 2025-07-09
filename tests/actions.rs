@@ -32,14 +32,8 @@ mod tests {
         let action = create_test_action();
         assert_eq!(action.name, "make_planks");
         assert_eq!(action.cost, 2.0);
-        assert_eq!(
-            action.preconditions.get("has_wood").unwrap().as_f64(),
-            Some(1.0)
-        );
-        assert_eq!(
-            action.preconditions.get("has_tools").unwrap().as_f64(),
-            Some(1.0)
-        );
+        assert_eq!(action.preconditions.get::<f64>("has_wood"), Some(1.0));
+        assert_eq!(action.preconditions.get::<f64>("has_tools"), Some(1.0));
         if let StateOperation::Set(value) = action.effects.get("has_planks").unwrap() {
             assert_eq!(value.as_f64(), Some(1.0));
         } else {
@@ -79,9 +73,9 @@ mod tests {
         let initial_state = create_test_state();
         let result_state = action.apply_effect(&initial_state);
 
-        assert_eq!(result_state.get("has_planks").unwrap().as_f64(), Some(1.0));
-        assert_eq!(result_state.get("has_wood").unwrap().as_f64(), Some(0.0));
-        assert_eq!(result_state.get("has_tools").unwrap().as_f64(), Some(1.0));
+        assert_eq!(result_state.get::<f64>("has_planks"), Some(1.0));
+        assert_eq!(result_state.get::<f64>("has_wood"), Some(0.0));
+        assert_eq!(result_state.get::<f64>("has_tools"), Some(1.0));
     }
 
     // Tests for ActionBuilder - Bool preconditions and effects
@@ -96,14 +90,8 @@ mod tests {
             .requires("door_locked", false)
             .build();
 
-        assert_eq!(
-            action.preconditions.get("has_key"),
-            Some(&StateVar::Bool(true))
-        );
-        assert_eq!(
-            action.preconditions.get("door_locked"),
-            Some(&StateVar::Bool(false))
-        );
+        assert_eq!(action.preconditions.get::<bool>("has_key"), Some(true));
+        assert_eq!(action.preconditions.get::<bool>("door_locked"), Some(false));
     }
 
     /// Test ActionBuilder with boolean effects using Set operation
@@ -141,8 +129,8 @@ mod tests {
             .requires("level", 5)
             .build();
 
-        assert_eq!(action.preconditions.get("gold"), Some(&StateVar::I64(100)));
-        assert_eq!(action.preconditions.get("level"), Some(&StateVar::I64(5)));
+        assert_eq!(action.preconditions.get::<i64>("gold"), Some(100));
+        assert_eq!(action.preconditions.get::<i64>("level"), Some(5));
     }
 
     /// Test ActionBuilder with integer Set effects
@@ -226,14 +214,8 @@ mod tests {
             .requires("speed", 2.25)
             .build();
 
-        assert_eq!(
-            action.preconditions.get("health"),
-            Some(&StateVar::F64(75500))
-        );
-        assert_eq!(
-            action.preconditions.get("speed"),
-            Some(&StateVar::F64(2250))
-        );
+        assert_eq!(action.preconditions.get::<f64>("health"), Some(75.5));
+        assert_eq!(action.preconditions.get::<f64>("speed"), Some(2.25));
     }
 
     /// Test ActionBuilder with float Set effects
@@ -317,14 +299,8 @@ mod tests {
             .requires("state", "peaceful")
             .build();
 
-        assert_eq!(
-            action.preconditions.get("location"),
-            Some(&StateVar::String("town".to_string()))
-        );
-        assert_eq!(
-            action.preconditions.get("state"),
-            Some(&StateVar::String("peaceful".to_string()))
-        );
+        assert_eq!(action.preconditions.get::<String>("location"), Some("town".to_string()));
+        assert_eq!(action.preconditions.get::<String>("state"), Some("peaceful".to_string()));
     }
 
     /// Test ActionBuilder with string/enum Set effects
@@ -385,19 +361,10 @@ mod tests {
             .requires("location", "castle")
             .build();
 
-        assert_eq!(
-            action.preconditions.get("has_key"),
-            Some(&StateVar::Bool(true))
-        );
-        assert_eq!(action.preconditions.get("gold"), Some(&StateVar::I64(100)));
-        assert_eq!(
-            action.preconditions.get("health"),
-            Some(&StateVar::F64(75500))
-        );
-        assert_eq!(
-            action.preconditions.get("location"),
-            Some(&StateVar::String("castle".to_string()))
-        );
+        assert_eq!(action.preconditions.get::<bool>("has_key"), Some(true));
+        assert_eq!(action.preconditions.get::<i64>("gold"), Some(100));
+        assert_eq!(action.preconditions.get::<f64>("health"), Some(75.5));
+        assert_eq!(action.preconditions.get::<String>("location"), Some("castle".to_string()));
     }
 
     /// Test ActionBuilder with mixed effect types

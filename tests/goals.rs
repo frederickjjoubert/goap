@@ -23,10 +23,7 @@ mod tests {
 
         assert_eq!(goal.name, "test_goal");
         assert_eq!(goal.priority, 5);
-        assert_eq!(
-            goal.desired_state.get("has_item"),
-            Some(&StateVar::Bool(true))
-        );
+        assert_eq!(goal.desired_state.get::<bool>("has_item"), Some(true));
     }
 
     // Tests for GoalBuilder - Bool requirements
@@ -41,14 +38,8 @@ mod tests {
             .requires("door_locked", false)
             .build();
 
-        assert_eq!(
-            goal.desired_state.get("has_key"),
-            Some(&StateVar::Bool(true))
-        );
-        assert_eq!(
-            goal.desired_state.get("door_locked"),
-            Some(&StateVar::Bool(false))
-        );
+        assert_eq!(goal.desired_state.get::<bool>("has_key"), Some(true));
+        assert_eq!(goal.desired_state.get::<bool>("door_locked"), Some(false));
     }
 
     // Tests for GoalBuilder - I64 requirements
@@ -63,8 +54,8 @@ mod tests {
             .requires("level", 5)
             .build();
 
-        assert_eq!(goal.desired_state.get("gold"), Some(&StateVar::I64(100)));
-        assert_eq!(goal.desired_state.get("level"), Some(&StateVar::I64(5)));
+        assert_eq!(goal.desired_state.get::<i64>("gold"), Some(100));
+        assert_eq!(goal.desired_state.get::<i64>("level"), Some(5));
     }
 
     // Tests for GoalBuilder - F64 requirements
@@ -79,11 +70,8 @@ mod tests {
             .requires("speed", 2.25)
             .build();
 
-        assert_eq!(
-            goal.desired_state.get("health"),
-            Some(&StateVar::F64(75500))
-        );
-        assert_eq!(goal.desired_state.get("speed"), Some(&StateVar::F64(2250)));
+        assert_eq!(goal.desired_state.get::<f64>("health"), Some(75.5));
+        assert_eq!(goal.desired_state.get::<f64>("speed"), Some(2.25));
     }
 
     // Tests for GoalBuilder - String requirements
@@ -99,12 +87,12 @@ mod tests {
             .build();
 
         assert_eq!(
-            goal.desired_state.get("location"),
-            Some(&StateVar::String("town".to_string()))
+            goal.desired_state.get::<String>("location"),
+            Some("town".to_string())
         );
         assert_eq!(
-            goal.desired_state.get("weather"),
-            Some(&StateVar::String("sunny".to_string()))
+            goal.desired_state.get::<String>("weather"),
+            Some("sunny".to_string())
         );
     }
 
@@ -144,18 +132,12 @@ mod tests {
             .priority(5)
             .build();
 
+        assert_eq!(goal.desired_state.get::<bool>("has_key"), Some(true));
+        assert_eq!(goal.desired_state.get::<i64>("gold"), Some(100));
+        assert_eq!(goal.desired_state.get::<f64>("health"), Some(75.5));
         assert_eq!(
-            goal.desired_state.get("has_key"),
-            Some(&StateVar::Bool(true))
-        );
-        assert_eq!(goal.desired_state.get("gold"), Some(&StateVar::I64(100)));
-        assert_eq!(
-            goal.desired_state.get("health"),
-            Some(&StateVar::F64(75500))
-        );
-        assert_eq!(
-            goal.desired_state.get("location"),
-            Some(&StateVar::String("castle".to_string()))
+            goal.desired_state.get::<String>("location"),
+            Some("castle".to_string())
         );
         assert_eq!(goal.priority, 5);
     }

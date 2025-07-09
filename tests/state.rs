@@ -166,14 +166,11 @@ mod tests {
         state.set("float_var", StateVar::F64(1500)); // 1.5
         state.set("string_var", StateVar::String("test".to_string()));
 
-        assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(42)));
-        assert_eq!(state.get("float_var"), Some(&StateVar::F64(1500)));
-        assert_eq!(
-            state.get("string_var"),
-            Some(&StateVar::String("test".to_string()))
-        );
-        assert_eq!(state.get("nonexistent"), None);
+        assert_eq!(state.get::<bool>("bool_var"), Some(true));
+        assert_eq!(state.get::<i64>("int_var"), Some(42));
+        assert_eq!(state.get::<f64>("float_var"), Some(1.5));
+        assert_eq!(state.get::<String>("string_var"), Some("test".to_string()));
+        assert_eq!(state.get::<bool>("nonexistent"), None);
     }
 
     // Tests for State satisfaction logic
@@ -310,12 +307,9 @@ mod tests {
 
         state.apply(&changes);
 
-        assert_eq!(state.get("bool_var"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(20)));
-        assert_eq!(
-            state.get("string_var"),
-            Some(&StateVar::String("new".to_string()))
-        );
+        assert_eq!(state.get::<bool>("bool_var"), Some(true));
+        assert_eq!(state.get::<i64>("int_var"), Some(20));
+        assert_eq!(state.get::<String>("string_var"), Some("new".to_string()));
     }
 
     /// Test State apply with Add operations on i64
@@ -330,7 +324,7 @@ mod tests {
         changes.insert("int_var".to_string(), StateOperation::Add(5));
         state.apply(&changes);
 
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(15)));
+        assert_eq!(state.get::<i64>("int_var"), Some(15));
     }
 
     /// Test State apply with Add operations on f64
@@ -345,7 +339,7 @@ mod tests {
         changes.insert("float_var".to_string(), StateOperation::Add(500)); // Add 0.5
         state.apply(&changes);
 
-        assert_eq!(state.get("float_var"), Some(&StateVar::F64(2000))); // Should be 2.0
+        assert_eq!(state.get::<f64>("float_var"), Some(2.0));
     }
 
     /// Test State apply with Subtract operations on i64
@@ -360,7 +354,7 @@ mod tests {
         changes.insert("int_var".to_string(), StateOperation::Subtract(3));
         state.apply(&changes);
 
-        assert_eq!(state.get("int_var"), Some(&StateVar::I64(12)));
+        assert_eq!(state.get::<i64>("int_var"), Some(12));
     }
 
     /// Test State apply with Subtract operations on f64
@@ -375,7 +369,7 @@ mod tests {
         changes.insert("float_var".to_string(), StateOperation::Subtract(750)); // Subtract 0.75
         state.apply(&changes);
 
-        assert_eq!(state.get("float_var"), Some(&StateVar::F64(1250))); // Should be 1.25
+        assert_eq!(state.get::<f64>("float_var"), Some(1.25));
     }
 
     /// Test State apply operations on missing variables
@@ -390,7 +384,7 @@ mod tests {
         state.apply(&changes);
 
         // Should not create the variable or crash
-        assert_eq!(state.get("nonexistent"), None);
+        assert_eq!(state.get::<i64>("nonexistent"), None);
     }
 
     // Tests for State merge operations
@@ -410,12 +404,9 @@ mod tests {
 
         state1.merge(&state2);
 
-        assert_eq!(state1.get("var1"), Some(&StateVar::Bool(true)));
-        assert_eq!(state1.get("var2"), Some(&StateVar::I64(20))); // Overridden
-        assert_eq!(
-            state1.get("var3"),
-            Some(&StateVar::String("test".to_string()))
-        );
+        assert_eq!(state1.get::<bool>("var1"), Some(true));
+        assert_eq!(state1.get::<i64>("var2"), Some(20)); // Overridden
+        assert_eq!(state1.get::<String>("var3"), Some("test".to_string()));
     }
 
     // Tests for State hash consistency
@@ -456,19 +447,13 @@ mod tests {
         state.set("int_var", StateVar::I64(42));
 
         // Test successful retrieval
-        match state.get("bool_var") {
-            Some(StateVar::Bool(value)) => assert_eq!(*value, true),
-            _ => panic!("Expected Bool value"),
-        }
+        assert_eq!(state.get::<bool>("bool_var"), Some(true));
 
         // Test variable not found
-        assert_eq!(state.get("nonexistent"), None);
+        assert_eq!(state.get::<bool>("nonexistent"), None);
 
         // Test wrong type
-        match state.get("int_var") {
-            Some(StateVar::I64(_)) => {} // This is expected, not an error
-            _ => panic!("Expected I64 value"),
-        }
+        assert_eq!(state.get::<i64>("int_var"), Some(42));
     }
 
     /// Test State get method with int pattern matching
@@ -481,19 +466,13 @@ mod tests {
         state.set("bool_var", StateVar::Bool(true));
 
         // Test successful retrieval
-        match state.get("int_var") {
-            Some(StateVar::I64(value)) => assert_eq!(*value, 42),
-            _ => panic!("Expected I64 value"),
-        }
+        assert_eq!(state.get::<i64>("int_var"), Some(42));
 
         // Test variable not found
-        assert_eq!(state.get("nonexistent"), None);
+        assert_eq!(state.get::<i64>("nonexistent"), None);
 
         // Test wrong type
-        match state.get("bool_var") {
-            Some(StateVar::Bool(_)) => {} // This is expected, not an error
-            _ => panic!("Expected Bool value"),
-        }
+        assert_eq!(state.get::<bool>("bool_var"), Some(true));
     }
 
     /// Test State get method with float pattern matching
@@ -506,19 +485,13 @@ mod tests {
         state.set("bool_var", StateVar::Bool(true));
 
         // Test successful retrieval
-        match state.get("float_var") {
-            Some(var) => assert_eq!(var.as_f64(), Some(1.5)),
-            _ => panic!("Expected F64 value"),
-        }
+        assert_eq!(state.get::<f64>("float_var"), Some(1.5));
 
         // Test variable not found
-        assert_eq!(state.get("nonexistent"), None);
+        assert_eq!(state.get::<f64>("nonexistent"), None);
 
         // Test wrong type
-        match state.get("bool_var") {
-            Some(StateVar::Bool(_)) => {} // This is expected, not an error
-            _ => panic!("Expected Bool value"),
-        }
+        assert_eq!(state.get::<bool>("bool_var"), Some(true));
     }
 
     /// Test State get method with enum/string pattern matching
@@ -531,19 +504,13 @@ mod tests {
         state.set("bool_var", StateVar::Bool(true));
 
         // Test successful retrieval
-        match state.get("string_var") {
-            Some(StateVar::String(value)) => assert_eq!(value, "test"),
-            _ => panic!("Expected String value"),
-        }
+        assert_eq!(state.get::<String>("string_var"), Some("test".to_string()));
 
         // Test variable not found
-        assert_eq!(state.get("nonexistent"), None);
+        assert_eq!(state.get::<String>("nonexistent"), None);
 
         // Test wrong type
-        match state.get("bool_var") {
-            Some(StateVar::Bool(_)) => {} // This is expected, not an error
-            _ => panic!("Expected Bool value"),
-        }
+        assert_eq!(state.get::<bool>("bool_var"), Some(true));
     }
 
     // Tests for StateBuilder functionality
@@ -554,7 +521,7 @@ mod tests {
     #[test]
     fn test_state_builder_bool() {
         let state = State::new().set("has_key", true).build();
-        assert_eq!(state.get("has_key"), Some(&StateVar::Bool(true)));
+        assert_eq!(state.get::<bool>("has_key"), Some(true));
     }
 
     /// Test StateBuilder set method with int
@@ -563,7 +530,7 @@ mod tests {
     #[test]
     fn test_state_builder_int() {
         let state = State::new().set("gold", 100).build();
-        assert_eq!(state.get("gold"), Some(&StateVar::I64(100)));
+        assert_eq!(state.get::<i64>("gold"), Some(100));
     }
 
     /// Test StateBuilder set method with float
@@ -572,7 +539,7 @@ mod tests {
     #[test]
     fn test_state_builder_float() {
         let state = State::new().set("health", 75.5).build();
-        assert_eq!(state.get("health"), Some(&StateVar::F64(75500)));
+        assert_eq!(state.get::<f64>("health"), Some(75.5));
     }
 
     /// Test StateBuilder set method with enum/string
@@ -581,10 +548,7 @@ mod tests {
     #[test]
     fn test_state_builder_enum_val() {
         let state = State::new().set("location", "town").build();
-        assert_eq!(
-            state.get("location"),
-            Some(&StateVar::String("town".to_string()))
-        );
+        assert_eq!(state.get::<String>("location"), Some("town".to_string()));
     }
 
     /// Test StateBuilder unified set method
@@ -599,13 +563,10 @@ mod tests {
             .set("location", "forest")
             .build();
 
-        assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("energy"), Some(&StateVar::I64(100)));
-        assert_eq!(state.get("temperature"), Some(&StateVar::F64(22500))); // 22.5 * 1000
-        assert_eq!(
-            state.get("location"),
-            Some(&StateVar::String("forest".to_string()))
-        );
+        assert_eq!(state.get::<bool>("has_wood"), Some(true));
+        assert_eq!(state.get::<i64>("energy"), Some(100));
+        assert_eq!(state.get::<f64>("temperature"), Some(22.5));
+        assert_eq!(state.get::<String>("location"), Some("forest".to_string()));
     }
 
     /// Test StateBuilder method chaining
@@ -621,17 +582,11 @@ mod tests {
             .set("weather", "sunny")
             .build();
 
-        assert_eq!(state.get("has_wood"), Some(&StateVar::Bool(true)));
-        assert_eq!(state.get("wood_count"), Some(&StateVar::I64(5)));
-        assert_eq!(state.get("health"), Some(&StateVar::F64(100000)));
-        assert_eq!(
-            state.get("location"),
-            Some(&StateVar::String("forest".to_string()))
-        );
-        assert_eq!(
-            state.get("weather"),
-            Some(&StateVar::String("sunny".to_string()))
-        );
+        assert_eq!(state.get::<bool>("has_wood"), Some(true));
+        assert_eq!(state.get::<i64>("wood_count"), Some(5));
+        assert_eq!(state.get::<f64>("health"), Some(100.0));
+        assert_eq!(state.get::<String>("location"), Some("forest".to_string()));
+        assert_eq!(state.get::<String>("weather"), Some("sunny".to_string()));
     }
 
     // Tests for StateOperation helper methods
@@ -702,18 +657,18 @@ mod tests {
         let mut changes = HashMap::new();
         changes.insert("value".to_string(), StateOperation::add_f64(0.5)); // Add 0.5
         state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(2.0));
+        assert_eq!(state.get::<f64>("value"), Some(2.0));
 
         // Test subtraction with helper
         changes.clear();
         changes.insert("value".to_string(), StateOperation::subtract_f64(0.75)); // Subtract 0.75
         state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(1.25));
+        assert_eq!(state.get::<f64>("value"), Some(1.25));
 
         // Test set with helper
         changes.clear();
         changes.insert("value".to_string(), StateOperation::set_f64(3.04159)); // Should round to 3.042
         state.apply(&changes);
-        assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(3.042));
+        assert_eq!(state.get::<f64>("value"), Some(3.042));
     }
 }
