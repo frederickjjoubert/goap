@@ -72,11 +72,23 @@ impl State {
         }
     }
 
-    pub fn set(&mut self, key: &str, value: StateVar) {
-        self.vars.insert(key.to_string(), value);
+    /// Generic set method that accepts any type implementing IntoStateVar
+    pub fn set<T: IntoStateVar>(&mut self, key: &str, value: T) {
+        self.vars.insert(key.to_string(), value.into_state_var());
     }
 
-    pub fn get(&self, key: &str) -> Option<&StateVar> {
+    /// Primary get method with type inference - returns None if key doesn't exist or type doesn't match
+    /// Usage: let x: Option<i32> = state.get("x");
+    pub fn get<T>(&self, key: &str) -> Option<T>
+    where
+        T: TryFromStateVar,
+    {
+        self.get_raw(key)
+            .and_then(|var| T::try_from_state_var(var, key).ok())
+    }
+
+    /// Internal method to get raw StateVar - not exposed to library users
+    fn get_raw(&self, key: &str) -> Option<&StateVar> {
         self.vars.get(key)
     }
 
@@ -211,7 +223,7 @@ pub enum StateVar {
     /// let mut changes = HashMap::new();
     /// changes.insert("value".to_string(), StateOperation::add_f64(0.5)); // Add 0.5
     /// state.apply(&changes);
-    /// assert_eq!(state.get("value").and_then(|v| v.as_f64()), Some(2.0));
+    /// assert_eq!(state.get::<f64>("value"), Some(2.0));
     /// ```
     F64(i64),
     String(String),
@@ -262,6 +274,82 @@ impl StateVar {
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             StateVar::F64(value) => Some(*value as f64 / 1000.0),
+            _ => None,
+        }
+    }
+
+    /// Extracts the value as an i64.
+    /// Returns None if the StateVar is not an I64.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let value = StateVar::I64(42);
+    /// assert_eq!(value.as_i64(), Some(42));
+    ///
+    /// // Returns None for other types
+    /// assert_eq!(StateVar::Bool(true).as_i64(), None);
+    /// ```
+    pub fn as_i64(&self) -> Option<i64> {
+        match self {
+            StateVar::I64(value) => Some(*value),
+            _ => None,
+        }
+    }
+
+    /// Extracts the value as an i32.
+    /// Returns None if the StateVar is not an I64 or if the value doesn't fit in an i32.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let value = StateVar::I64(42);
+    /// assert_eq!(value.as_i32(), Some(42));
+    ///
+    /// // Returns None for other types
+    /// assert_eq!(StateVar::Bool(true).as_i32(), None);
+    /// ```
+    pub fn as_i32(&self) -> Option<i32> {
+        match self {
+            StateVar::I64(value) => (*value).try_into().ok(),
+            _ => None,
+        }
+    }
+
+    /// Extracts the value as a bool.
+    /// Returns None if the StateVar is not a Bool.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let value = StateVar::Bool(true);
+    /// assert_eq!(value.as_bool(), Some(true));
+    ///
+    /// // Returns None for other types
+    /// assert_eq!(StateVar::I64(42).as_bool(), None);
+    /// ```
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            StateVar::Bool(value) => Some(*value),
+            _ => None,
+        }
+    }
+
+    /// Extracts the value as a String reference.
+    /// Returns None if the StateVar is not a String.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use goap::prelude::*;
+    /// let value = StateVar::String("hello".to_string());
+    /// assert_eq!(value.as_string(), Some("hello"));
+    ///
+    /// // Returns None for other types
+    /// assert_eq!(StateVar::Bool(true).as_string(), None);
+    /// ```
+    pub fn as_string(&self) -> Option<&str> {
+        match self {
+            StateVar::String(value) => Some(value),
             _ => None,
         }
     }
@@ -342,6 +430,59 @@ impl From<i8> for StateVar {
 // Trait for types that can be converted to StateVar, including proper enum support
 pub trait IntoStateVar {
     fn into_state_var(self) -> StateVar;
+}
+
+// Trait for types that can be extracted from StateVar with proper error handling
+pub trait TryFromStateVar: Sized {
+    fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError>;
+}
+
+// Implementations for common types
+impl TryFromStateVar for i32 {
+    fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError> {
+        var.as_i32().ok_or_else(|| StateError::InvalidVarType {
+            var: key.to_string(),
+            expected: "i32",
+        })
+    }
+}
+
+impl TryFromStateVar for i64 {
+    fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError> {
+        var.as_i64().ok_or_else(|| StateError::InvalidVarType {
+            var: key.to_string(),
+            expected: "i64",
+        })
+    }
+}
+
+impl TryFromStateVar for bool {
+    fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError> {
+        var.as_bool().ok_or_else(|| StateError::InvalidVarType {
+            var: key.to_string(),
+            expected: "bool",
+        })
+    }
+}
+
+impl TryFromStateVar for f64 {
+    fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError> {
+        var.as_f64().ok_or_else(|| StateError::InvalidVarType {
+            var: key.to_string(),
+            expected: "f64",
+        })
+    }
+}
+
+impl TryFromStateVar for String {
+    fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError> {
+        var.as_string()
+            .map(|s| s.to_string())
+            .ok_or_else(|| StateError::InvalidVarType {
+                var: key.to_string(),
+                expected: "string",
+            })
+    }
 }
 
 // Implement for all existing types

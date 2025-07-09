@@ -1,4 +1,6 @@
 pub use crate::actions::{Action, NumericValue};
 pub use crate::goals::Goal;
 pub use crate::planner::{Plan, Planner, PlannerError};
-pub use crate::state::{EnumStateVar, IntoStateVar, State, StateError, StateOperation, StateVar};
+pub use crate::state::{
+    EnumStateVar, IntoStateVar, State, StateError, StateOperation, StateVar, TryFromStateVar,
+};
