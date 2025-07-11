@@ -102,7 +102,7 @@ impl Planner {
                 return Ok(plan);
             }
 
-            let current_g = *g_score.get(&current).unwrap();
+            let current_g = *g_score.get(&current).unwrap_or(&f64::INFINITY);
             let transitions = self.get_valid_transitions(&current, actions);
 
             for (next_state, cost, action) in transitions {
@@ -217,7 +217,9 @@ impl<N: Eq> Eq for NodeWrapper<N> {}
 
 impl<N: Eq> Ord for NodeWrapper<N> {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.f_score.partial_cmp(&other.f_score).unwrap().reverse()
+        // Use total ordering: NaN values are treated as greater than any finite value
+        // This means NaN f-scores will have the lowest priority in our min-heap
+        other.f_score.total_cmp(&self.f_score)
     }
 }
 
@@ -259,5 +261,57 @@ mod tests {
 
         let h = planner.heuristic(&current, &goal).unwrap();
         assert!(h > 0.0); // Should have some distance to goal
+    }
+
+    #[test]
+    fn test_node_wrapper_nan_handling() {
+        let state1 = State::empty();
+        let state2 = State::empty();
+        let state3 = State::empty();
+
+        let normal_node = NodeWrapper {
+            node: state1,
+            f_score: 10.0,
+        };
+        let nan_node = NodeWrapper {
+            node: state2,
+            f_score: f64::NAN,
+        };
+        let another_nan_node = NodeWrapper {
+            node: state3,
+            f_score: f64::NAN,
+        };
+
+        // Test that NaN nodes are ordered consistently
+        // NaN should be treated as the worst score (lowest priority)
+        assert!(normal_node > nan_node); // Normal score should beat NaN
+        assert_eq!(nan_node.cmp(&another_nan_node), std::cmp::Ordering::Equal); // Two NaN should be equal
+        
+        // Test that we can create a BinaryHeap with NaN values without panicking
+        let mut heap = std::collections::BinaryHeap::new();
+        heap.push(normal_node);
+        heap.push(nan_node);
+        heap.push(another_nan_node);
+        
+        // Should be able to pop without panicking
+        let first = heap.pop().unwrap();
+        assert_eq!(first.f_score, 10.0); // Normal score should come first
+    }
+
+    #[test]
+    fn test_heuristic_with_type_mismatch() {
+        let planner = Planner::new();
+
+        let current = State::new().set("value", 0).build();
+        let goal = State::new().set("value", "string").build(); // Type mismatch
+
+        let result = planner.heuristic(&current, &goal);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            PlannerError::IncompatibleStateTypes(msg) => {
+                assert!(msg.contains("Cannot calculate distance for variable 'value'"));
+            }
+            _ => panic!("Expected IncompatibleStateTypes error"),
+        }
     }
 }
