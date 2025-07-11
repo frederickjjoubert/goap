@@ -17,12 +17,12 @@ Goals define a desired state. Create goals using the builder pattern:
 ```rust
 use goap::prelude::*;
 
-let goal = Goal::builder("craft_item")
+let goal = Goal::new("craft_item")
     // All possible requirement types
-    .require_bool("has_tools", true)         // Boolean requirement
-    .require_int("materials", 5)             // Integer requirement (satisfied by >= 5)
-    .require_float("energy", 50.0)           // Float requirement (satisfied by >= 50.0)
-    .require_enum("location", "workshop")    // Enum/String requirement (exact match)
+    .requires("has_tools", true)         // Boolean requirement
+    .requires("materials", 5)            // Integer requirement (satisfied by >= 5)
+    .requires("energy", 50.0)            // Float requirement (satisfied by >= 50.0)
+    .requires("location", "workshop")    // String requirement (exact match)
     .build();
 ```
 
@@ -33,22 +33,22 @@ Actions are operations that change the world state. Each action has precondition
 ```rust
 use goap::prelude::*;
 
-let craft = Action::builder("craft_item")
+let craft = Action::new("craft_item")
     .cost(2.0)  // Action cost
     // All possible precondition types
-    .precondition("has_tools", true)         // Boolean precondition
-    .precondition("materials", 5)            // Integer precondition
-    .precondition("energy", 50.0)            // Float precondition
-    .precondition("location", "workshop")    // Enum/String precondition
+    .requires("has_tools", true)         // Boolean precondition
+    .requires("materials", 5)            // Integer precondition
+    .requires("energy", 50.0)            // Float precondition
+    .requires("location", "workshop")    // String precondition
     // All possible effect types
-    .effect_set_to("has_item", true)         // Set boolean
-    .effect_set_to("materials", 0)           // Set integer
-    .effect_set_to("energy", 25.0)           // Set float
-    .effect_set_to("location", "workshop")   // Set enum/string
-    .effect_add_int("items_crafted", 1)      // Add to integer
-    .effect_subtract_int("materials", 5)      // Subtract from integer
-    .effect_add_float("experience", 10.0)     // Add to float
-    .effect_subtract_float("energy", 25.0)    // Subtract from float
+    .sets("has_item", true)              // Set boolean
+    .sets("materials", 0)                // Set integer
+    .sets("energy", 25.0)                // Set float
+    .sets("location", "workshop")        // Set string
+    .adds("items_crafted", 1)            // Add to integer
+    .subtracts("materials", 5)           // Subtract from integer
+    .adds("experience", 10.0)            // Add to float
+    .subtracts("energy", 25.0)           // Subtract from float
     .build();
 ```
 
@@ -59,13 +59,55 @@ State represents the current state of the world:
 ```rust
 use goap::prelude::*;
 
-let state = State::builder()
+let state = State::new()
     // All possible state types
-    .bool("has_tools", true)             // Boolean state
-    .int("materials", 10)                // Integer state
-    .float("energy", 100.0)              // Float state
-    .enum_val("location", "workshop")    // Enum/String state
+    .set("has_tools", true)              // Boolean state
+    .set("materials", 10)                // Integer state
+    .set("energy", 100.0)                // Float state
+    .set("location", "workshop")         // String state
     .build();
+```
+
+### Planning
+
+Use the planner to find a sequence of actions to achieve a goal:
+
+```rust
+use goap::prelude::*;
+
+// Create initial state
+let initial_state = State::new()
+    .set("has_wood", false)
+    .set("has_axe", true)
+    .set("at_tree", false)
+    .build();
+
+// Create goal
+let goal = Goal::new("gather_wood")
+    .requires("has_wood", true)
+    .build();
+
+// Create actions
+let move_to_tree = Action::new("move_to_tree")
+    .sets("at_tree", true)
+    .build();
+
+let chop_tree = Action::new("chop_tree")
+    .cost(2.0)
+    .requires("has_axe", true)
+    .requires("at_tree", true)
+    .sets("has_wood", true)
+    .build();
+
+// Find plan
+let actions = vec![move_to_tree, chop_tree];
+let planner = Planner::new();
+let plan = planner.plan(initial_state, &goal, &actions).unwrap();
+
+println!("Found plan with cost {}", plan.cost);
+for action in &plan.actions {
+    println!("- {}", action.name);
+}
 ```
 
 See the examples directory for complete usage examples including:

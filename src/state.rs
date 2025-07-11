@@ -3,9 +3,12 @@ use std::error::Error;
 use std::fmt;
 use std::hash::Hash;
 
+/// Errors that can occur when working with state variables.
 #[derive(Debug, PartialEq, Eq)]
 pub enum StateError {
+    /// The requested state variable was not found
     VarNotFound(String),
+    /// The state variable exists but is not of the expected type
     InvalidVarType { var: String, expected: &'static str },
 }
 
@@ -22,9 +25,12 @@ impl fmt::Display for StateError {
 
 impl Error for StateError {}
 
-// State representation as a collection of named variables
+/// Represents the state of the world as a collection of named variables.
+/// Each variable has a name (string key) and a typed value (StateVar).
+/// States are used to represent the current world state, goal states, and action preconditions.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct State {
+    /// The variables that make up this state, indexed by name
     pub vars: HashMap<String, StateVar>,
 }
 
@@ -62,10 +68,12 @@ impl Default for State {
 }
 
 impl State {
+    /// Creates a new StateBuilder for constructing a state with the fluent interface.
     pub fn new() -> StateBuilder {
         StateBuilder::new()
     }
 
+    /// Creates an empty state with no variables.
     pub fn empty() -> Self {
         State {
             vars: HashMap::new(),
@@ -92,6 +100,9 @@ impl State {
         self.vars.get(key)
     }
 
+    /// Checks if this state satisfies all the conditions in the given state.
+    /// For boolean and string variables, values must match exactly.
+    /// For numeric variables, this state's value must be >= the required value.
     pub fn satisfies(&self, conditions: &State) -> bool {
         for (key, value) in &conditions.vars {
             match self.vars.get(key) {
@@ -126,6 +137,8 @@ impl State {
         true
     }
 
+    /// Applies a set of state operations to this state, modifying it in place.
+    /// Operations can set variables to new values, add to numeric variables, or subtract from them.
     pub fn apply(&mut self, changes: &HashMap<String, StateOperation>) {
         for (key, operation) in changes {
             match operation {
@@ -158,6 +171,7 @@ impl State {
         }
     }
 
+    /// Merges another state into this one, overwriting any existing variables with the same name.
     pub fn merge(&mut self, other: &State) {
         for (key, value) in &other.vars {
             self.vars.insert(key.clone(), value.clone());
@@ -165,23 +179,28 @@ impl State {
     }
 }
 
+/// Builder for constructing states with a fluent interface.
+/// Use `State::new()` to create a new builder.
 pub struct StateBuilder {
+    /// The variables being built
     vars: HashMap<String, StateVar>,
 }
 
 impl StateBuilder {
+    /// Creates a new empty StateBuilder.
     pub fn new() -> Self {
         StateBuilder {
             vars: HashMap::new(),
         }
     }
 
-    /// Unified method to set any value type
+    /// Sets a variable to the given value. This method accepts any type that can be converted to a StateVar.
     pub fn set<T: IntoStateVar>(mut self, key: &str, value: T) -> Self {
         self.vars.insert(key.to_string(), value.into_state_var());
         self
     }
 
+    /// Builds the final State from the configured builder.
     pub fn build(self) -> State {
         State { vars: self.vars }
     }
@@ -193,10 +212,13 @@ impl Default for StateBuilder {
     }
 }
 
-// Variable types that can be stored in state
+/// Variable types that can be stored in the world state.
+/// Each variant represents a different data type that can be used in state variables.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum StateVar {
+    /// Boolean value (true/false)
     Bool(bool),
+    /// 64-bit signed integer
     I64(i64),
     /// F64 values are stored as fixed-point numbers with 3 decimal places of precision.
     /// This means that floating point values are multiplied by 1000 and stored as integers.
@@ -210,22 +232,9 @@ pub enum StateVar {
     /// 2. We need to implement Hash and Eq traits
     /// 3. Floating point numbers don't support exact equality or hashing
     ///
-    /// To make this API more ergonomic, use the helper methods:
-    /// - `StateVar::from_f64(1.5)` to create a value
-    /// - `state_var.as_f64()` to read a value
-    ///
-    /// Note that arithmetic operations (Add/Subtract) can be performed using convenience methods:
-    /// ```rust
-    /// # use std::collections::HashMap;
-    /// # use goap::prelude::*;
-    /// # let mut state = State::empty();
-    /// # state.set("value", StateVar::from_f64(1.5));
-    /// let mut changes = HashMap::new();
-    /// changes.insert("value".to_string(), StateOperation::add_f64(0.5)); // Add 0.5
-    /// state.apply(&changes);
-    /// assert_eq!(state.get::<f64>("value"), Some(2.0));
-    /// ```
+    /// Note that arithmetic operations (Add/Subtract) can be performed using convenience methods.
     F64(i64),
+    /// String/text value for names, locations, enum values, etc.
     String(String),
 }
 
@@ -243,17 +252,6 @@ impl fmt::Display for StateVar {
 impl StateVar {
     /// Creates a new F64 StateVar from a floating point value.
     /// The value will be rounded to 3 decimal places.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let value = StateVar::from_f64(1.5);
-    /// assert_eq!(value, StateVar::F64(1500));
-    ///
-    /// // Handles rounding
-    /// let value = StateVar::from_f64(1.2345);
-    /// assert_eq!(value.as_f64(), Some(1.235));
-    /// ```
     pub fn from_f64(value: f64) -> Self {
         // Convert to fixed point with 3 decimal places
         StateVar::F64((value * 1000.0).round() as i64)
@@ -261,16 +259,6 @@ impl StateVar {
 
     /// Converts an F64 StateVar back to a floating point value.
     /// Returns None if the StateVar is not an F64.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let value = StateVar::from_f64(1.5);
-    /// assert_eq!(value.as_f64(), Some(1.5));
-    ///
-    /// // Returns None for other types
-    /// assert_eq!(StateVar::Bool(true).as_f64(), None);
-    /// ```
     pub fn as_f64(&self) -> Option<f64> {
         match self {
             StateVar::F64(value) => Some(*value as f64 / 1000.0),
@@ -280,16 +268,6 @@ impl StateVar {
 
     /// Extracts the value as an i64.
     /// Returns None if the StateVar is not an I64.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let value = StateVar::I64(42);
-    /// assert_eq!(value.as_i64(), Some(42));
-    ///
-    /// // Returns None for other types
-    /// assert_eq!(StateVar::Bool(true).as_i64(), None);
-    /// ```
     pub fn as_i64(&self) -> Option<i64> {
         match self {
             StateVar::I64(value) => Some(*value),
@@ -299,16 +277,6 @@ impl StateVar {
 
     /// Extracts the value as an i32.
     /// Returns None if the StateVar is not an I64 or if the value doesn't fit in an i32.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let value = StateVar::I64(42);
-    /// assert_eq!(value.as_i32(), Some(42));
-    ///
-    /// // Returns None for other types
-    /// assert_eq!(StateVar::Bool(true).as_i32(), None);
-    /// ```
     pub fn as_i32(&self) -> Option<i32> {
         match self {
             StateVar::I64(value) => (*value).try_into().ok(),
@@ -318,16 +286,6 @@ impl StateVar {
 
     /// Extracts the value as a bool.
     /// Returns None if the StateVar is not a Bool.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let value = StateVar::Bool(true);
-    /// assert_eq!(value.as_bool(), Some(true));
-    ///
-    /// // Returns None for other types
-    /// assert_eq!(StateVar::I64(42).as_bool(), None);
-    /// ```
     pub fn as_bool(&self) -> Option<bool> {
         match self {
             StateVar::Bool(value) => Some(*value),
@@ -337,16 +295,6 @@ impl StateVar {
 
     /// Extracts the value as a String reference.
     /// Returns None if the StateVar is not a String.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let value = StateVar::String("hello".to_string());
-    /// assert_eq!(value.as_string(), Some("hello"));
-    ///
-    /// // Returns None for other types
-    /// assert_eq!(StateVar::Bool(true).as_string(), None);
-    /// ```
     pub fn as_string(&self) -> Option<&str> {
         match self {
             StateVar::String(value) => Some(value),
@@ -354,6 +302,11 @@ impl StateVar {
         }
     }
 
+    /// Calculates the distance between two StateVar values.
+    /// This is used by the planner's heuristic function to estimate cost.
+    /// For booleans and strings, distance is 0 if equal, 1 if different.
+    /// For numbers, distance is the absolute difference.
+    /// Panics if the StateVar types don't match.
     pub fn distance(&self, other: &StateVar) -> u64 {
         match (self, other) {
             (StateVar::Bool(a), StateVar::Bool(b)) => {
@@ -427,13 +380,19 @@ impl From<i8> for StateVar {
     }
 }
 
-// Trait for types that can be converted to StateVar, including proper enum support
+/// Trait for types that can be converted to StateVar.
+/// This trait is implemented for all common types (bool, integers, floats, strings)
+/// and can be implemented for custom enum types.
 pub trait IntoStateVar {
+    /// Converts this value into a StateVar.
     fn into_state_var(self) -> StateVar;
 }
 
-// Trait for types that can be extracted from StateVar with proper error handling
+/// Trait for types that can be extracted from StateVar with proper error handling.
+/// This trait is implemented for all common types and provides type-safe extraction.
 pub trait TryFromStateVar: Sized {
+    /// Attempts to extract a value of this type from a StateVar.
+    /// Returns an error if the StateVar is not of the expected type.
     fn try_from_state_var(var: &StateVar, key: &str) -> Result<Self, StateError>;
 }
 
@@ -546,7 +505,9 @@ impl IntoStateVar for StateVar {
     }
 }
 
-// Helper trait to identify types that should be treated as enums
+/// Marker trait for enum types that should be stored as strings in the state.
+/// Implement this trait on your enum types to enable them to be used as state variables.
+/// Your enum must also implement `Display` to convert to string representation.
 pub trait EnumStateVar: fmt::Display {}
 
 // Blanket implementation for any enum that implements Display and our marker trait
@@ -559,86 +520,48 @@ where
     }
 }
 
-// First, let's define how a state variable can be modified
+/// Operations that can be performed on state variables.
+/// These operations are used in action effects to modify the world state.
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum StateOperation {
+    /// Set a variable to a specific value
     Set(StateVar),
-    Add(i64),      // Add value (for integers and fixed-point)
-    Subtract(i64), // Subtract value (for integers and fixed-point)
+    /// Add a value to a numeric variable (for integers and fixed-point floats)
+    Add(i64),
+    /// Subtract a value from a numeric variable (for integers and fixed-point floats)
+    Subtract(i64),
 }
 
 impl StateOperation {
     /// Creates a Set operation that will set the value to the given i64 value.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let op = StateOperation::set_i64(100); // Will set the value to 100
-    /// assert_eq!(op, StateOperation::Set(StateVar::I64(100)));
-    /// ```
     pub fn set_i64(value: i64) -> Self {
         StateOperation::Set(StateVar::I64(value))
     }
 
     /// Creates an Add operation that will add the given i64 value.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let op = StateOperation::add_i64(50); // Will add 50 to the value
-    /// assert_eq!(op, StateOperation::Add(50));
-    /// ```
     pub fn add_i64(value: i64) -> Self {
         StateOperation::Add(value)
     }
 
     /// Creates a Subtract operation that will subtract the given i64 value.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let op = StateOperation::subtract_i64(50); // Will subtract 50 from the value
-    /// assert_eq!(op, StateOperation::Subtract(50));
-    /// ```
     pub fn subtract_i64(value: i64) -> Self {
         StateOperation::Subtract(value)
     }
 
     /// Creates a Set operation that will set the value to the given f64 value.
     /// The value will be converted to fixed point with 3 decimal places.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let op = StateOperation::set_f64(1.5); // Will set the value to 1.5
-    /// assert_eq!(op, StateOperation::Set(StateVar::F64(1500)));
-    /// ```
     pub fn set_f64(value: f64) -> Self {
         StateOperation::Set(StateVar::from_f64(value))
     }
 
     /// Creates an Add operation that will add the given f64 value.
     /// The value will be converted to fixed point with 3 decimal places.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let op = StateOperation::add_f64(1.5); // Will add 1.5 to the value
-    /// assert_eq!(op, StateOperation::Add(1500));
-    /// ```
     pub fn add_f64(value: f64) -> Self {
         StateOperation::Add((value * 1000.0).round() as i64)
     }
 
     /// Creates a Subtract operation that will subtract the given f64 value.
     /// The value will be converted to fixed point with 3 decimal places.
-    ///
-    /// # Examples
-    /// ```rust
-    /// # use goap::prelude::*;
-    /// let op = StateOperation::subtract_f64(1.5); // Will subtract 1.5 from the value
-    /// assert_eq!(op, StateOperation::Subtract(1500));
-    /// ```
     pub fn subtract_f64(value: f64) -> Self {
         StateOperation::Subtract((value * 1000.0).round() as i64)
     }

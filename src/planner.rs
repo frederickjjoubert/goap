@@ -6,8 +6,10 @@ use std::collections::{BinaryHeap, HashMap};
 use std::error::Error;
 use std::fmt;
 
+/// Errors that can occur during planning.
 #[derive(Debug, PartialEq, Eq)]
 pub enum PlannerError {
+    /// No valid sequence of actions could be found to achieve the goal
     NoPlanFound,
 }
 
@@ -21,9 +23,13 @@ impl fmt::Display for PlannerError {
 
 impl Error for PlannerError {}
 
+/// A plan represents a sequence of actions that will achieve a goal.
+/// It includes the actions to perform and the total cost of execution.
 #[derive(Debug)]
 pub struct Plan {
+    /// The sequence of actions to perform in order
     pub actions: Vec<Action>,
+    /// The total cost of executing all actions in the plan
     pub cost: f64,
 }
 
@@ -37,6 +43,8 @@ impl fmt::Display for Plan {
     }
 }
 
+/// A planner that uses A* search to find optimal sequences of actions.
+/// The planner is stateless and can be reused for multiple planning requests.
 pub struct Planner {}
 
 impl Default for Planner {
@@ -46,10 +54,22 @@ impl Default for Planner {
 }
 
 impl Planner {
+    /// Creates a new planner instance.
     pub fn new() -> Self {
         Planner {}
     }
 
+    /// Finds a plan to achieve the given goal starting from the initial state.
+    /// 
+    /// Uses A* search algorithm to find the optimal sequence of actions.
+    /// Returns a `Plan` containing the actions to perform and their total cost,
+    /// or `PlannerError::NoPlanFound` if no valid plan exists.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `initial_state` - The starting state of the world
+    /// * `goal` - The goal to achieve
+    /// * `actions` - The available actions that can be performed
     pub fn plan(
         &self,
         initial_state: State,
@@ -103,6 +123,8 @@ impl Planner {
         Err(PlannerError::NoPlanFound)
     }
 
+    /// Gets all valid transitions from the current state.
+    /// Returns a vector of (next_state, cost, action) tuples for actions that can be executed.
     fn get_valid_transitions(
         &self,
         state: &State,
@@ -118,6 +140,9 @@ impl Planner {
         transitions
     }
 
+    /// Calculates the heuristic distance from the current state to the goal state.
+    /// This is used by A* to guide the search towards the goal.
+    /// Returns the estimated cost to reach the goal from the current state.
     fn heuristic(&self, current: &State, goal: &State) -> f64 {
         let mut total_distance = 0;
 
@@ -137,6 +162,8 @@ impl Planner {
         total_distance as f64
     }
 
+    /// Reconstructs the final plan from the search data structures.
+    /// Traces back through the came_from map to build the sequence of actions.
     fn reconstruct_path(
         &self,
         came_from: &HashMap<State, State>,
@@ -163,10 +190,13 @@ impl Planner {
     }
 }
 
-// Node wrapper for the priority queue
+/// Wrapper for nodes in the A* search priority queue.
+/// Allows states to be ordered by their f-score for efficient retrieval.
 #[derive(Clone)]
 struct NodeWrapper<N> {
+    /// The state being wrapped
     node: N,
+    /// The f-score (g + h) used for A* search ordering
     f_score: f64,
 }
 
