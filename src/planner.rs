@@ -11,12 +11,15 @@ use std::fmt;
 pub enum PlannerError {
     /// No valid sequence of actions could be found to achieve the goal
     NoPlanFound,
+    /// State variables have incompatible types for comparison
+    IncompatibleStateTypes(String),
 }
 
 impl fmt::Display for PlannerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PlannerError::NoPlanFound => write!(f, "No plan found"),
+            PlannerError::IncompatibleStateTypes(msg) => write!(f, "Incompatible state types: {msg}"),
         }
     }
 }
@@ -82,7 +85,7 @@ impl Planner {
         let mut action_taken = HashMap::new();
 
         g_score.insert(initial_state.clone(), 0.0);
-        let initial_h = self.heuristic(&initial_state, &goal.desired_state);
+        let initial_h = self.heuristic(&initial_state, &goal.desired_state)?;
 
         open_set.push(NodeWrapper {
             node: initial_state.clone(),
@@ -104,7 +107,7 @@ impl Planner {
 
             for (next_state, cost, action) in transitions {
                 let tentative_g = current_g + cost;
-                let next_h = self.heuristic(&next_state, &goal.desired_state);
+                let next_h = self.heuristic(&next_state, &goal.desired_state)?;
                 let next_f = tentative_g + next_h;
 
                 if tentative_g < *g_score.get(&next_state).unwrap_or(&f64::INFINITY) {
@@ -143,14 +146,18 @@ impl Planner {
     /// Calculates the heuristic distance from the current state to the goal state.
     /// This is used by A* to guide the search towards the goal.
     /// Returns the estimated cost to reach the goal from the current state.
-    fn heuristic(&self, current: &State, goal: &State) -> f64 {
+    /// Returns an error if state variables have incompatible types.
+    fn heuristic(&self, current: &State, goal: &State) -> Result<f64, PlannerError> {
         let mut total_distance = 0;
 
         // Calculate distance for each goal requirement
         for (key, goal_val) in &goal.vars {
             match current.vars.get(key) {
                 Some(current_val) => {
-                    let distance = current_val.distance(goal_val);
+                    let distance = current_val.distance(goal_val)
+                        .map_err(|_| PlannerError::IncompatibleStateTypes(
+                            format!("Cannot calculate distance for variable '{key}' due to type mismatch")
+                        ))?;
                     total_distance += distance;
                 }
                 None => {
@@ -159,7 +166,7 @@ impl Planner {
             }
         }
 
-        total_distance as f64
+        Ok(total_distance as f64)
     }
 
     /// Reconstructs the final plan from the search data structures.
@@ -250,7 +257,7 @@ mod tests {
 
         let goal = State::new().set("value", 10).set("flag", true).build();
 
-        let h = planner.heuristic(&current, &goal);
+        let h = planner.heuristic(&current, &goal).unwrap();
         assert!(h > 0.0); // Should have some distance to goal
     }
 }

@@ -11,33 +11,6 @@
 /// - **Actions**: Operations that can change the world state, with preconditions and effects
 /// - **Planner**: Uses A* search to find optimal sequences of actions to achieve goals
 ///
-/// ## Quick Start
-///
-/// ```rust
-/// use goap::prelude::*;
-///
-/// // Create initial state
-/// let state = State::new()
-///     .set("has_wood", false)
-///     .set("has_axe", true)
-///     .build();
-///
-/// // Define goal
-/// let goal = Goal::new("get_wood")
-///     .requires("has_wood", true)
-///     .build();
-///
-/// // Create action
-/// let chop_wood = Action::new("chop_wood")
-///     .requires("has_axe", true)
-///     .sets("has_wood", true)
-///     .build();
-///
-/// // Find plan
-/// let planner = Planner::new();
-/// let plan = planner.plan(state, &goal, &[chop_wood]).unwrap();
-/// ```
-///
 
 /// Actions module - defines actions that can be performed to change state
 pub mod actions;

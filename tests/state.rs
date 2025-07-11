@@ -10,10 +10,10 @@ mod tests {
     /// Failure: Boolean distance calculation logic is broken
     #[test]
     fn test_state_var_bool_distance() {
-        assert_eq!(StateVar::Bool(true).distance(&StateVar::Bool(true)), 0);
-        assert_eq!(StateVar::Bool(false).distance(&StateVar::Bool(false)), 0);
-        assert_eq!(StateVar::Bool(true).distance(&StateVar::Bool(false)), 1);
-        assert_eq!(StateVar::Bool(false).distance(&StateVar::Bool(true)), 1);
+        assert_eq!(StateVar::Bool(true).distance(&StateVar::Bool(true)).unwrap(), 0);
+        assert_eq!(StateVar::Bool(false).distance(&StateVar::Bool(false)).unwrap(), 0);
+        assert_eq!(StateVar::Bool(true).distance(&StateVar::Bool(false)).unwrap(), 1);
+        assert_eq!(StateVar::Bool(false).distance(&StateVar::Bool(true)).unwrap(), 1);
     }
 
     /// Test StateVar distance calculation for i64 values
@@ -21,10 +21,10 @@ mod tests {
     /// Failure: Integer distance calculation logic is broken
     #[test]
     fn test_state_var_i64_distance() {
-        assert_eq!(StateVar::I64(5).distance(&StateVar::I64(5)), 0);
-        assert_eq!(StateVar::I64(10).distance(&StateVar::I64(5)), 5);
-        assert_eq!(StateVar::I64(5).distance(&StateVar::I64(10)), 5);
-        assert_eq!(StateVar::I64(-5).distance(&StateVar::I64(5)), 10);
+        assert_eq!(StateVar::I64(5).distance(&StateVar::I64(5)).unwrap(), 0);
+        assert_eq!(StateVar::I64(10).distance(&StateVar::I64(5)).unwrap(), 5);
+        assert_eq!(StateVar::I64(5).distance(&StateVar::I64(10)).unwrap(), 5);
+        assert_eq!(StateVar::I64(-5).distance(&StateVar::I64(5)).unwrap(), 10);
     }
 
     /// Test StateVar distance calculation for f64 values
@@ -34,16 +34,16 @@ mod tests {
     fn test_state_var_f64_distance() {
         // Test fixed point number distance (3 decimal places)
         // 1.5 is stored as 1500
-        assert_eq!(StateVar::F64(1500).distance(&StateVar::F64(1500)), 0);
+        assert_eq!(StateVar::F64(1500).distance(&StateVar::F64(1500)).unwrap(), 0);
         // 1.5 to 2.5 = distance of 1000 (1.0)
-        assert_eq!(StateVar::F64(1500).distance(&StateVar::F64(2500)), 1000);
+        assert_eq!(StateVar::F64(1500).distance(&StateVar::F64(2500)).unwrap(), 1000);
         // 2.5 to 1.5 = distance of 1000 (1.0)
-        assert_eq!(StateVar::F64(2500).distance(&StateVar::F64(1500)), 1000);
+        assert_eq!(StateVar::F64(2500).distance(&StateVar::F64(1500)).unwrap(), 1000);
         // -1.5 to 1.5 = distance of 3000 (3.0)
-        assert_eq!(StateVar::F64(-1500).distance(&StateVar::F64(1500)), 3000);
+        assert_eq!(StateVar::F64(-1500).distance(&StateVar::F64(1500)).unwrap(), 3000);
         // Test small decimal differences
         // 1.001 to 1.002 = distance of 1 (0.001)
-        assert_eq!(StateVar::F64(1001).distance(&StateVar::F64(1002)), 1);
+        assert_eq!(StateVar::F64(1001).distance(&StateVar::F64(1002)).unwrap(), 1);
     }
 
     /// Test StateVar distance calculation for string values
@@ -52,31 +52,43 @@ mod tests {
     #[test]
     fn test_state_var_string_distance() {
         assert_eq!(
-            StateVar::String("A".to_string()).distance(&StateVar::String("A".to_string())),
+            StateVar::String("A".to_string()).distance(&StateVar::String("A".to_string())).unwrap(),
             0
         );
         assert_eq!(
-            StateVar::String("A".to_string()).distance(&StateVar::String("B".to_string())),
+            StateVar::String("A".to_string()).distance(&StateVar::String("B".to_string())).unwrap(),
             1
         );
     }
 
-    /// Test StateVar distance calculation panics for mismatched types
-    /// Validates: Distance calculation panics when comparing different StateVar types
+    /// Test StateVar distance calculation returns error for mismatched types
+    /// Validates: Distance calculation returns error when comparing different StateVar types
     /// Failure: Type mismatch detection is broken
     #[test]
-    #[should_panic(expected = "Cannot calculate distance between different StateVar types")]
     fn test_state_var_distance_type_mismatch() {
-        StateVar::Bool(true).distance(&StateVar::I64(5));
+        let result = StateVar::Bool(true).distance(&StateVar::I64(5));
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            StateError::InvalidVarType { expected, .. } => {
+                assert_eq!(expected, "matching types for distance calculation");
+            }
+            _ => panic!("Expected InvalidVarType error"),
+        }
     }
 
-    /// Test StateVar distance calculation panics for f64/i64 mismatch
+    /// Test StateVar distance calculation returns error for f64/i64 mismatch
     /// Validates: F64 and I64 are treated as different types for distance calculation
     /// Failure: F64/I64 type distinction is broken
     #[test]
-    #[should_panic(expected = "Cannot calculate distance between different StateVar types")]
     fn test_state_var_f64_i64_distance_mismatch() {
-        StateVar::F64(1500).distance(&StateVar::I64(1500));
+        let result = StateVar::F64(1500).distance(&StateVar::I64(1500));
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            StateError::InvalidVarType { expected, .. } => {
+                assert_eq!(expected, "matching types for distance calculation");
+            }
+            _ => panic!("Expected InvalidVarType error"),
+        }
     }
 
     // Tests for StateVar conversion functionality

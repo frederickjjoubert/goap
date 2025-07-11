@@ -306,26 +306,21 @@ impl StateVar {
     /// This is used by the planner's heuristic function to estimate cost.
     /// For booleans and strings, distance is 0 if equal, 1 if different.
     /// For numbers, distance is the absolute difference.
-    /// Panics if the StateVar types don't match.
-    pub fn distance(&self, other: &StateVar) -> u64 {
+    /// Returns an error if the StateVar types don't match.
+    pub fn distance(&self, other: &StateVar) -> Result<u64, StateError> {
         match (self, other) {
             (StateVar::Bool(a), StateVar::Bool(b)) => {
-                if a == b {
-                    0
-                } else {
-                    1
-                }
+                Ok(if a == b { 0 } else { 1 })
             }
-            (StateVar::I64(a), StateVar::I64(b)) => (*a - *b).unsigned_abs(),
-            (StateVar::F64(a), StateVar::F64(b)) => (*a - *b).unsigned_abs(),
+            (StateVar::I64(a), StateVar::I64(b)) => Ok((*a - *b).unsigned_abs()),
+            (StateVar::F64(a), StateVar::F64(b)) => Ok((*a - *b).unsigned_abs()),
             (StateVar::String(a), StateVar::String(b)) => {
-                if a == b {
-                    0
-                } else {
-                    1
-                }
+                Ok(if a == b { 0 } else { 1 })
             }
-            _ => panic!("Cannot calculate distance between different StateVar types"),
+            _ => Err(StateError::InvalidVarType {
+                var: "distance_calculation".to_string(),
+                expected: "matching types for distance calculation",
+            }),
         }
     }
 }
