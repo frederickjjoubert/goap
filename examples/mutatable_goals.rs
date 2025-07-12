@@ -5,7 +5,7 @@ fn main() {
 
     // Current API - Using builder pattern
     println!("=== Current Builder API ===");
-    let mut goal = Goal::new("survive_battle")
+    let goal = Goal::new("survive_battle")
         .priority(100)
         .requires("health", 50)
         .requires("has_weapon", true)
@@ -13,7 +13,7 @@ fn main() {
         .requires("mana", 30)
         .build();
 
-    println!("Original goal:\n{}\n", goal);
+    println!("Original goal:\n{goal}\n");
 
     // PROPOSED: Direct mutation API similar to State
     println!("=== PROPOSED: Direct Mutation API ===");

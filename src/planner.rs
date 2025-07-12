@@ -19,7 +19,9 @@ impl fmt::Display for PlannerError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PlannerError::NoPlanFound => write!(f, "No plan found"),
-            PlannerError::IncompatibleStateTypes(msg) => write!(f, "Incompatible state types: {msg}"),
+            PlannerError::IncompatibleStateTypes(msg) => {
+                write!(f, "Incompatible state types: {msg}")
+            }
         }
     }
 }
@@ -63,13 +65,13 @@ impl Planner {
     }
 
     /// Finds a plan to achieve the given goal starting from the initial state.
-    /// 
+    ///
     /// Uses A* search algorithm to find the optimal sequence of actions.
     /// Returns a `Plan` containing the actions to perform and their total cost,
     /// or `PlannerError::NoPlanFound` if no valid plan exists.
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `initial_state` - The starting state of the world
     /// * `goal` - The goal to achieve
     /// * `actions` - The available actions that can be performed
@@ -154,10 +156,11 @@ impl Planner {
         for (key, goal_val) in &goal.vars {
             match current.vars.get(key) {
                 Some(current_val) => {
-                    let distance = current_val.distance(goal_val)
-                        .map_err(|_| PlannerError::IncompatibleStateTypes(
-                            format!("Cannot calculate distance for variable '{key}' due to type mismatch")
-                        ))?;
+                    let distance = current_val.distance(goal_val).map_err(|_| {
+                        PlannerError::IncompatibleStateTypes(format!(
+                            "Cannot calculate distance for variable '{key}' due to type mismatch"
+                        ))
+                    })?;
                     total_distance += distance;
                 }
                 None => {
@@ -286,13 +289,13 @@ mod tests {
         // NaN should be treated as the worst score (lowest priority)
         assert!(normal_node > nan_node); // Normal score should beat NaN
         assert_eq!(nan_node.cmp(&another_nan_node), std::cmp::Ordering::Equal); // Two NaN should be equal
-        
+
         // Test that we can create a BinaryHeap with NaN values without panicking
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(normal_node);
         heap.push(nan_node);
         heap.push(another_nan_node);
-        
+
         // Should be able to pop without panicking
         let first = heap.pop().unwrap();
         assert_eq!(first.f_score, 10.0); // Normal score should come first

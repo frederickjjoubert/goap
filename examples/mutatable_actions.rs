@@ -5,7 +5,7 @@ fn main() {
 
     // Current API - Using builder pattern
     println!("=== Current Builder API ===");
-    let mut action = Action::new("attack_enemy")
+    let action = Action::new("attack_enemy")
         .cost(3.0)
         .requires("has_weapon", true)
         .requires("stamina", 10)
@@ -15,7 +15,7 @@ fn main() {
         .adds("experience", 50)
         .build();
 
-    println!("Original action:\n{}\n", action);
+    println!("Original action:\n{action}\n");
 
     // PROPOSED: Direct mutation API similar to State
     println!("=== PROPOSED: Direct Mutation API ===");

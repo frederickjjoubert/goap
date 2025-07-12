@@ -1,8 +1,7 @@
-/// Convenient imports for common GOAP usage patterns.
-///
-/// This module re-exports the most commonly used types and traits from the library,
-/// allowing users to import everything they need with `use goap::prelude::*;`.
-///
+//! Convenient imports for common GOAP usage patterns.
+//!
+//! This module re-exports the most commonly used types and traits from the library,
+//! allowing users to import everything they need with `use goap::prelude::*;`.
 
 /// Action-related types for defining what agents can do
 pub use crate::actions::{Action, NumericValue};

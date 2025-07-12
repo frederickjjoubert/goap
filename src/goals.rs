@@ -27,6 +27,7 @@ impl fmt::Display for Goal {
 
 impl Goal {
     /// Creates a new GoalBuilder for constructing a goal with the given name.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(name: &str) -> GoalBuilder {
         GoalBuilder::new(name)
     }

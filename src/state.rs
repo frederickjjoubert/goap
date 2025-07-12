@@ -69,6 +69,7 @@ impl Default for State {
 
 impl State {
     /// Creates a new StateBuilder for constructing a state with the fluent interface.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new() -> StateBuilder {
         StateBuilder::new()
     }
@@ -309,14 +310,10 @@ impl StateVar {
     /// Returns an error if the StateVar types don't match.
     pub fn distance(&self, other: &StateVar) -> Result<u64, StateError> {
         match (self, other) {
-            (StateVar::Bool(a), StateVar::Bool(b)) => {
-                Ok(if a == b { 0 } else { 1 })
-            }
+            (StateVar::Bool(a), StateVar::Bool(b)) => Ok(if a == b { 0 } else { 1 }),
             (StateVar::I64(a), StateVar::I64(b)) => Ok((*a - *b).unsigned_abs()),
             (StateVar::F64(a), StateVar::F64(b)) => Ok((*a - *b).unsigned_abs()),
-            (StateVar::String(a), StateVar::String(b)) => {
-                Ok(if a == b { 0 } else { 1 })
-            }
+            (StateVar::String(a), StateVar::String(b)) => Ok(if a == b { 0 } else { 1 }),
             _ => Err(StateError::InvalidVarType {
                 var: "distance_calculation".to_string(),
                 expected: "matching types for distance calculation",

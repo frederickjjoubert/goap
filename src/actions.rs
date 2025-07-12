@@ -47,6 +47,7 @@ impl fmt::Display for Action {
 
 impl Action {
     /// Creates a new ActionBuilder for constructing an action with the given name.
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(name: &str) -> ActionBuilder {
         ActionBuilder::new(name)
     }
