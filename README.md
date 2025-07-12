@@ -1,6 +1,6 @@
-# Goal Oriented Action Planning (GOAP)
+# Goal-Oriented Action Planning (GOAP)
 
-A general purpose Goal Oriented Action Planning (GOAP) library written in Rust.
+A general purpose Goal-Oriented Action Planning (GOAP) library written in Rust.
 
 - Goals are a desired state of the world that an agent wants to achieve.
 - Actions are the atomic operations that can be performed in the world, requiring preconditions and having effects.
@@ -110,6 +110,8 @@ for action in &plan.actions {
 }
 ```
 
+## Examples
+
 See the examples directory for complete usage examples including:
 
 - Resource gathering and crafting
@@ -117,3 +119,13 @@ See the examples directory for complete usage examples including:
 - Navigation and pathfinding
 - Combat and strategy
 - Base building and management
+
+## License
+
+This project is triple-licensed under:
+
+- [MIT License](LICENSE-MIT)
+- [Apache License 2.0](LICENSE-Apache-2.0)  
+- [BSD 3-Clause License](LICENSE-BSD-3-Clause)
+
+You may use this software under the terms of any of these licenses.
