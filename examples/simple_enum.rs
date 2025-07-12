@@ -124,9 +124,4 @@ fn main() {
         current_state.satisfies(&goal.desired_state),
         "Final state should meet all goals"
     );
-
-    println!("✅ Simple enum example completed successfully!");
-    println!("This demonstrates that proper enum types work with the GOAP library.");
-    println!("You can define your own enums, implement Display and EnumStateVar,");
-    println!("and then use them directly in states, goals, and actions!");
 }

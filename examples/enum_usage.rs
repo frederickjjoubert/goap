@@ -1,7 +1,7 @@
 use goap::prelude::*;
 use std::fmt;
 
-// Define custom enums for our RPG character system
+// Define custom enums
 #[derive(Debug, Clone, PartialEq)]
 enum Location {
     Town,

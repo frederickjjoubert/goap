@@ -143,7 +143,7 @@ fn main() {
         );
     }
 
-    // Verify the plan contains all necessary actions (in any order)
+    // Verify the plan contains all necessary actions
     let action_names: Vec<_> = plan.actions.iter().map(|a| a.name.as_str()).collect();
 
     // Verify resource gathering chain
@@ -222,10 +222,16 @@ fn main() {
         assert!(final_defense >= 75, "Defense rating should be at least 75");
     }
     if let Some(final_energy) = current_state.get::<i64>("energy") {
-        assert!(final_energy >= 50, "Energy production should be at least 50");
+        assert!(
+            final_energy >= 50,
+            "Energy production should be at least 50"
+        );
     }
     if let Some(final_battery) = current_state.get::<i64>("battery_charge") {
-        assert!(final_battery >= 100, "Battery charge should be at least 100");
+        assert!(
+            final_battery >= 100,
+            "Battery charge should be at least 100"
+        );
     }
 
     println!("\nFinal base state verification:");
