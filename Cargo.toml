@@ -8,5 +8,10 @@ authors = [
 description = "A general purpose Goal-Oriented Action Planning (GOAP) library written in Rust."
 readme = "README.md"
 license = "MIT OR Apache-2.0 OR BSD-3-Clause"
+repository = "https://github.com/frederickjjoubert/goap"
+homepage = "https://github.com/frederickjjoubert/goap"
+documentation = "https://docs.rs/goap"
+keywords = ["goap", "ai", "planning", "game-ai", "behavior"]
+categories = ["algorithms", "data-structures"]
 
 [dependencies]
