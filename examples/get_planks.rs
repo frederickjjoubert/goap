@@ -4,14 +4,18 @@ fn main() {
     // Create initial state
     let initial_state = State::new()
         .set("has_wood", false)
+        .set("has_planks", false)
         .set("has_axe", false)
         .set("has_money", true)
         .set("at_store", false)
         .set("at_tree", false)
+        .set("at_sawmill", false)
         .build();
 
     // Create goal state
-    let goal = Goal::new("gather_wood").requires("has_wood", true).build();
+    let goal = Goal::new("craft_planks")
+        .requires("has_planks", true)
+        .build();
 
     // Create actions
     let goto_store = Action::new("goto_store")
@@ -40,8 +44,29 @@ fn main() {
         .sets("has_wood", true)
         .build();
 
+    let goto_sawmill = Action::new("goto_sawmill")
+        .cost(1.0)
+        .requires("has_wood", true)
+        .sets("at_tree", false)
+        .sets("at_sawmill", true)
+        .build();
+
+    let saw_planks = Action::new("saw_planks")
+        .cost(1.0)
+        .requires("has_wood", true)
+        .requires("at_sawmill", true)
+        .sets("has_planks", true)
+        .build();
+
     // Collect all actions
-    let actions = vec![goto_store, buy_axe, goto_tree, chop_tree];
+    let actions = vec![
+        goto_store,
+        buy_axe,
+        goto_tree,
+        chop_tree,
+        goto_sawmill,
+        saw_planks,
+    ];
 
     // Create planner
     let planner = Planner::new();
@@ -51,9 +76,16 @@ fn main() {
     assert!(plan_result.is_ok(), "Expected to find a valid plan");
 
     let plan = plan_result.unwrap();
-    assert_eq!(plan.cost, 5.0, "Expected total cost to be 5.0");
+    assert_eq!(plan.cost, 7.0, "Expected total cost to be 7.0");
 
-    let expected_actions = ["goto_store", "buy_axe", "goto_tree", "chop_tree"];
+    let expected_actions = [
+        "goto_store",
+        "buy_axe",
+        "goto_tree",
+        "chop_tree",
+        "goto_sawmill",
+        "saw_planks",
+    ];
     assert_eq!(
         plan.actions.len(),
         expected_actions.len(),
