@@ -11,7 +11,15 @@ license = "MIT OR Apache-2.0 OR BSD-3-Clause"
 repository = "https://github.com/frederickjjoubert/goap"
 homepage = "https://github.com/frederickjjoubert/goap"
 documentation = "https://docs.rs/goap"
-keywords = ["goap", "ai", "planning", "game-ai", "behavior"]
-categories = ["algorithms", "data-structures"]
+keywords = [
+    "goap",
+    "ai",
+    "planning",
+    "game-ai",
+    "behavior",
+    "astar",
+    "simulation",
+]
+categories = ["algorithms", "data-structures", "game-development", "simulation"]
 
 [dependencies]
