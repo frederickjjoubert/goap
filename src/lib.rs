@@ -7,12 +7,20 @@
 //! ## Core Concepts
 //!
 //! - **State**: Represents the current state of the world using typed variables
+//! - **Conditions**: Comparisons (`==`, `>=`, `<=`, ranges, ...) on state variables
 //! - **Goals**: Define desired world states that the agent wants to achieve
 //! - **Actions**: Operations that can change the world state, with preconditions and effects
-//! - **Planner**: Uses A* search to find optimal sequences of actions to achieve goals
+//! - **Planner**: Uses A* search to find optimal sequences of actions to achieve goals,
+//!   with an expansion budget so planning always terminates
+
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
+#![warn(missing_debug_implementations)]
 
 /// Actions module - defines actions that can be performed to change state
 pub mod actions;
+/// Conditions module - comparisons used by goal requirements and action preconditions
+pub mod conditions;
 /// Goals module - defines goals that agents want to achieve
 pub mod goals;
 /// Planner module - implements A* search for finding action sequences

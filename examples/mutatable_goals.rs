@@ -5,12 +5,12 @@ fn main() {
 
     // Current API - Using builder pattern
     println!("=== Current Builder API ===");
-    let goal = Goal::new("survive_battle")
+    let goal = Goal::builder("survive_battle")
         .priority(100)
-        .requires("health", 50)
+        .requires("health", at_least(50))
         .requires("has_weapon", true)
-        .requires("armor_durability", 25)
-        .requires("mana", 30)
+        .requires("armor_durability", at_least(25))
+        .requires("mana", at_least(30))
         .build();
 
     println!("Original goal:\n{goal}\n");

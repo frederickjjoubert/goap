@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - starting resources and market conditions
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("gold", 1000)
         .set("total_profit", 0)
         .set("reputation", 0)
@@ -19,18 +19,18 @@ fn main() {
         .build();
 
     // Goal state - become a successful merchant
-    let goal = Goal::new("master_merchant")
-        .requires("total_profit", 2000)
-        .requires("reputation", 50)
-        .requires("trade_routes", 2)
+    let goal = Goal::builder("master_merchant")
+        .requires("total_profit", at_least(2000))
+        .requires("reputation", at_least(50))
+        .requires("trade_routes", at_least(2))
         .requires("has_guild_membership", true)
         .build();
 
     // Action: Join Merchant's Guild
-    let join_guild = Action::new("join_guild")
+    let join_guild = Action::builder("join_guild")
         .cost(5.0)
-        .requires("gold", 1500)
-        .requires("reputation", 30)
+        .requires("gold", at_least(1500))
+        .requires("reputation", at_least(30))
         .requires("has_guild_membership", false)
         .subtracts("gold", 1500)
         .sets("has_guild_membership", true)
@@ -39,9 +39,9 @@ fn main() {
         .build();
 
     // Action: Buy Warehouse
-    let buy_warehouse = Action::new("buy_warehouse")
+    let buy_warehouse = Action::builder("buy_warehouse")
         .cost(10.0)
-        .requires("gold", 2000)
+        .requires("gold", at_least(2000))
         .requires("has_warehouse", false)
         .subtracts("gold", 2000)
         .sets("has_warehouse", true)
@@ -50,9 +50,9 @@ fn main() {
         .build();
 
     // Action: Purchase Caravan (reduced cost)
-    let buy_caravan = Action::new("buy_caravan")
+    let buy_caravan = Action::builder("buy_caravan")
         .cost(8.0)
-        .requires("gold", 1500)
+        .requires("gold", at_least(1500))
         .requires("has_caravan", false)
         .subtracts("gold", 1500)
         .sets("has_caravan", true)
@@ -60,10 +60,10 @@ fn main() {
         .build();
 
     // Action: Buy Grain (Bulk)
-    let buy_grain = Action::new("buy_grain_bulk")
+    let buy_grain = Action::builder("buy_grain_bulk")
         .cost(2.0)
-        .requires("gold", 500)
-        .requires("storage_space", 50)
+        .requires("gold", at_least(500))
+        .requires("storage_space", at_least(50))
         .requires("used_storage", 0)
         .subtracts("gold", 500)
         .adds("grain", 50)
@@ -71,10 +71,10 @@ fn main() {
         .build();
 
     // Action: Buy Ore (Bulk)
-    let buy_ore = Action::new("buy_ore_bulk")
+    let buy_ore = Action::builder("buy_ore_bulk")
         .cost(3.0)
-        .requires("gold", 800)
-        .requires("storage_space", 40)
+        .requires("gold", at_least(800))
+        .requires("storage_space", at_least(40))
         .requires("used_storage", 0)
         .subtracts("gold", 800)
         .adds("ore", 40)
@@ -82,10 +82,10 @@ fn main() {
         .build();
 
     // Action: Buy Textiles (Bulk)
-    let buy_textiles = Action::new("buy_textiles_bulk")
+    let buy_textiles = Action::builder("buy_textiles_bulk")
         .cost(4.0)
-        .requires("gold", 1000)
-        .requires("storage_space", 30)
+        .requires("gold", at_least(1000))
+        .requires("storage_space", at_least(30))
         .requires("used_storage", 0)
         .subtracts("gold", 1000)
         .adds("textiles", 30)
@@ -93,9 +93,9 @@ fn main() {
         .build();
 
     // Action: Sell Grain (Local Market)
-    let sell_grain_local = Action::new("sell_grain_local")
+    let sell_grain_local = Action::builder("sell_grain_local")
         .cost(1.0)
-        .requires("grain", 50)
+        .requires("grain", at_least(50))
         .adds("gold", 600)
         .subtracts("grain", 50)
         .subtracts("used_storage", 50)
@@ -104,9 +104,9 @@ fn main() {
         .build();
 
     // Action: Sell Grain (Distant Market - requires caravan)
-    let sell_grain_distant = Action::new("sell_grain_distant")
+    let sell_grain_distant = Action::builder("sell_grain_distant")
         .cost(3.0)
-        .requires("grain", 50)
+        .requires("grain", at_least(50))
         .requires("has_caravan", true)
         .adds("gold", 800)
         .subtracts("grain", 50)
@@ -116,9 +116,9 @@ fn main() {
         .build();
 
     // Action: Sell Ore (Local Market)
-    let sell_ore_local = Action::new("sell_ore_local")
+    let sell_ore_local = Action::builder("sell_ore_local")
         .cost(1.0)
-        .requires("ore", 40)
+        .requires("ore", at_least(40))
         .adds("gold", 1000)
         .subtracts("ore", 40)
         .subtracts("used_storage", 40)
@@ -127,9 +127,9 @@ fn main() {
         .build();
 
     // Action: Sell Ore (Distant Market - requires caravan)
-    let sell_ore_distant = Action::new("sell_ore_distant")
+    let sell_ore_distant = Action::builder("sell_ore_distant")
         .cost(3.0)
-        .requires("ore", 40)
+        .requires("ore", at_least(40))
         .requires("has_caravan", true)
         .adds("gold", 1400)
         .subtracts("ore", 40)
@@ -139,9 +139,9 @@ fn main() {
         .build();
 
     // Action: Sell Textiles (Local Market)
-    let sell_textiles_local = Action::new("sell_textiles_local")
+    let sell_textiles_local = Action::builder("sell_textiles_local")
         .cost(1.0)
-        .requires("textiles", 30)
+        .requires("textiles", at_least(30))
         .adds("gold", 1300)
         .subtracts("textiles", 30)
         .subtracts("used_storage", 30)
@@ -150,9 +150,9 @@ fn main() {
         .build();
 
     // Action: Sell Textiles (Distant Market - requires caravan)
-    let sell_textiles_distant = Action::new("sell_textiles_distant")
+    let sell_textiles_distant = Action::builder("sell_textiles_distant")
         .cost(3.0)
-        .requires("textiles", 30)
+        .requires("textiles", at_least(30))
         .requires("has_caravan", true)
         .adds("gold", 1800)
         .subtracts("textiles", 30)
@@ -162,11 +162,11 @@ fn main() {
         .build();
 
     // Action: Establish New Trade Route (requires guild membership)
-    let establish_route = Action::new("establish_trade_route")
+    let establish_route = Action::builder("establish_trade_route")
         .cost(15.0)
-        .requires("gold", 3000)
+        .requires("gold", at_least(3000))
         .requires("has_guild_membership", true)
-        .requires("reputation", 40)
+        .requires("reputation", at_least(40))
         .subtracts("gold", 3000)
         .adds("trade_routes", 1)
         .adds("reputation", 30)
@@ -192,7 +192,7 @@ fn main() {
     // Create planner
     let planner = Planner::new();
 
-    match planner.plan(initial_state.clone(), &goal, &actions) {
+    match planner.plan(&initial_state, &goal, &actions) {
         Ok(plan) => {
             let action_count = plan.actions.len();
             let cost = plan.cost;
@@ -218,20 +218,20 @@ fn main() {
                     println!("Trade Routes: {routes}");
                 }
 
-                if let Some(guild) = current_state.get::<bool>("has_guild_membership") {
-                    if guild {
-                        println!("Guild Member: Yes");
-                    }
+                if let Some(guild) = current_state.get::<bool>("has_guild_membership")
+                    && guild
+                {
+                    println!("Guild Member: Yes");
                 }
-                if let Some(caravan) = current_state.get::<bool>("has_caravan") {
-                    if caravan {
-                        println!("Has Caravan: Yes");
-                    }
+                if let Some(caravan) = current_state.get::<bool>("has_caravan")
+                    && caravan
+                {
+                    println!("Has Caravan: Yes");
                 }
-                if let Some(warehouse) = current_state.get::<bool>("has_warehouse") {
-                    if warehouse {
-                        println!("Has Warehouse: Yes");
-                    }
+                if let Some(warehouse) = current_state.get::<bool>("has_warehouse")
+                    && warehouse
+                {
+                    println!("Has Warehouse: Yes");
                 }
             }
         }

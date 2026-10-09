@@ -4,7 +4,7 @@ fn main() {
     println!("=== Modifiable State Usage Example ===\n");
 
     // Create an empty state
-    let mut state = State::empty();
+    let mut state = State::new();
     println!("Initial state: {state}");
 
     // Basic set operations
@@ -63,7 +63,7 @@ fn main() {
     println!("\n=== Complex State Operations ===");
 
     // Building a game character state
-    let mut character_state = State::empty();
+    let mut character_state = State::new();
     character_state.set("level", 1i32);
     character_state.set("experience", 0i32);
     character_state.set("gold", 100i32);
@@ -81,12 +81,12 @@ fn main() {
     }
 
     // Simulate spending gold
-    if let Some(current_gold) = character_state.get::<i32>("gold") {
-        if current_gold >= 50 {
-            character_state.set("gold", current_gold - 50);
-            character_state.set("has_magic_sword", true);
-            println!("Bought magic sword! New state: {character_state}");
-        }
+    if let Some(current_gold) = character_state.get::<i32>("gold")
+        && current_gold >= 50
+    {
+        character_state.set("gold", current_gold - 50);
+        character_state.set("has_magic_sword", true);
+        println!("Bought magic sword! New state: {character_state}");
     }
 
     let current_stamina = character_state.get::<f64>("stamina").unwrap_or(100.0);

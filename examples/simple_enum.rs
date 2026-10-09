@@ -1,5 +1,6 @@
 use goap::prelude::*;
 use std::fmt;
+use std::str::FromStr;
 
 // Define a simple location enum
 #[derive(Debug, Clone, PartialEq)]
@@ -19,44 +20,58 @@ impl fmt::Display for Location {
     }
 }
 
+// `FromStr` is the inverse of `Display`; it lets `state.get::<Location>` work.
+impl FromStr for Location {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "home" => Ok(Location::Home),
+            "work" => Ok(Location::Work),
+            "store" => Ok(Location::Store),
+            other => Err(format!("unknown location '{other}'")),
+        }
+    }
+}
+
 // Implement the marker trait to enable enum support
 impl EnumStateVar for Location {}
 
 fn main() {
     // Initial state - character starts at home
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("location", Location::Home)
         .set("has_money", false)
         .set("has_food", false)
         .build();
 
     // Goal state - be at home with food
-    let goal = Goal::new("get_food_and_return")
+    let goal = Goal::builder("get_food_and_return")
         .requires("location", Location::Home)
         .requires("has_food", true)
         .build();
 
     // Action: Go to work to earn money
-    let go_to_work = Action::new("go_to_work")
+    let go_to_work = Action::builder("go_to_work")
         .cost(1.0)
         .sets("location", Location::Work)
         .build();
 
     // Action: Work to earn money
-    let work = Action::new("work")
+    let work = Action::builder("work")
         .cost(2.0)
         .requires("location", Location::Work)
         .sets("has_money", true)
         .build();
 
     // Action: Go to store
-    let go_to_store = Action::new("go_to_store")
+    let go_to_store = Action::builder("go_to_store")
         .cost(1.0)
         .sets("location", Location::Store)
         .build();
 
     // Action: Buy food
-    let buy_food = Action::new("buy_food")
+    let buy_food = Action::builder("buy_food")
         .cost(1.0)
         .requires("location", Location::Store)
         .requires("has_money", true)
@@ -65,7 +80,7 @@ fn main() {
         .build();
 
     // Action: Go home
-    let go_home = Action::new("go_home")
+    let go_home = Action::builder("go_home")
         .cost(1.0)
         .sets("location", Location::Home)
         .build();
@@ -77,7 +92,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(
         plan_result.is_ok(),
         "Expected to find a valid plan for simple enum example"
@@ -106,9 +121,9 @@ fn main() {
         let name = &action.name;
         println!("After {name}:");
 
-        // Note: enum values are stored as strings but we defined them with proper enums
-        if let Some(location) = current_state.get::<String>("location") {
-            println!("  Location: {location}");
+        // Enum values are stored as strings and read back as the enum.
+        if let Some(location) = current_state.get::<Location>("location") {
+            println!("  Location: {location} ({location:?})");
         }
         if let Some(has_money) = current_state.get::<bool>("has_money") {
             println!("  Has Money: {has_money}");
@@ -121,7 +136,7 @@ fn main() {
 
     // Verify final state meets all goals
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 }

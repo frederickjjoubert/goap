@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Create initial state
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("has_wood", false)
         .set("has_planks", false)
         .set("has_axe", false)
@@ -13,17 +13,17 @@ fn main() {
         .build();
 
     // Create goal state
-    let goal = Goal::new("craft_planks")
+    let goal = Goal::builder("craft_planks")
         .requires("has_planks", true)
         .build();
 
     // Create actions
-    let goto_store = Action::new("goto_store")
+    let goto_store = Action::builder("goto_store")
         .cost(1.0)
         .sets("at_store", true)
         .build();
 
-    let buy_axe = Action::new("buy_axe")
+    let buy_axe = Action::builder("buy_axe")
         .cost(1.0)
         .requires("at_store", true)
         .requires("has_money", true)
@@ -31,27 +31,27 @@ fn main() {
         .sets("has_money", false)
         .build();
 
-    let goto_tree = Action::new("goto_tree")
+    let goto_tree = Action::builder("goto_tree")
         .cost(1.0)
         .sets("at_store", false)
         .sets("at_tree", true)
         .build();
 
-    let chop_tree = Action::new("chop_tree")
+    let chop_tree = Action::builder("chop_tree")
         .cost(2.0)
         .requires("has_axe", true)
         .requires("at_tree", true)
         .sets("has_wood", true)
         .build();
 
-    let goto_sawmill = Action::new("goto_sawmill")
+    let goto_sawmill = Action::builder("goto_sawmill")
         .cost(1.0)
         .requires("has_wood", true)
         .sets("at_tree", false)
         .sets("at_sawmill", true)
         .build();
 
-    let saw_planks = Action::new("saw_planks")
+    let saw_planks = Action::builder("saw_planks")
         .cost(1.0)
         .requires("has_wood", true)
         .requires("at_sawmill", true)
@@ -72,7 +72,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(plan_result.is_ok(), "Expected to find a valid plan");
 
     let plan = plan_result.unwrap();

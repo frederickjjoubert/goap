@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - robot starts at position (0,0)
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("x", 0)
         .set("y", 0)
         .set("battery", 300)
@@ -11,7 +11,7 @@ fn main() {
         .build();
 
     // Goal state - deliver package to position (8,5)
-    let goal = Goal::new("deliver_package")
+    let goal = Goal::builder("deliver_package")
         .requires("x", 8)
         .requires("y", 5)
         .requires("package_delivered", true)
@@ -22,7 +22,7 @@ fn main() {
         let distance = ((to.0 - from.0).pow(2) + (to.1 - from.1).pow(2)) as f64;
         let battery_cost = (distance * 5.0) as i64; // Battery cost based on distance
 
-        Action::new(&format!(
+        Action::builder(&format!(
             "goto_{}_{}_{to_x}_{to_y}",
             from.0,
             from.1,
@@ -32,7 +32,7 @@ fn main() {
         .cost(distance)
         .requires("x", from.0)
         .requires("y", from.1)
-        .requires("battery", battery_cost)
+        .requires("battery", at_least(battery_cost))
         .sets("x", to.0)
         .sets("y", to.1)
         .subtracts("battery", battery_cost)
@@ -59,7 +59,7 @@ fn main() {
     }
 
     // Action: Pick up package
-    let pickup_action = Action::new("pickup_package")
+    let pickup_action = Action::builder("pickup_package")
         .cost(1.0)
         .requires("x", 5)
         .requires("y", 2)
@@ -68,7 +68,7 @@ fn main() {
         .build();
 
     // Action: Deliver package
-    let deliver_action = Action::new("deliver_package")
+    let deliver_action = Action::builder("deliver_package")
         .cost(1.0)
         .requires("x", 8)
         .requires("y", 5)
@@ -85,7 +85,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(plan_result.is_ok(), "Expected to find a valid plan");
 
     let plan = plan_result.unwrap();
@@ -120,7 +120,7 @@ fn main() {
 
     // Verify final state
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 }

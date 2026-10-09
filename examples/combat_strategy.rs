@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - player is not ready for combat
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("health", 30) // Low health (30/100)
         .set("armor", 0) // No armor
         .set("ammo", 5) // Low ammo
@@ -13,14 +13,14 @@ fn main() {
         .build();
 
     // Goal state - ready for boss battle
-    let goal = Goal::new("prepare_for_boss")
-        .requires("health", 100) // Full health
-        .requires("armor", 50) // Decent armor
-        .requires("ammo", 50) // Sufficient ammo
+    let goal = Goal::builder("prepare_for_boss")
+        .requires("health", at_least(100)) // Full health
+        .requires("armor", at_least(50)) // Decent armor
+        .requires("ammo", at_least(50)) // Sufficient ammo
         .build();
 
     // Action: Move to medical bay
-    let goto_medical = Action::new("goto_medical")
+    let goto_medical = Action::builder("goto_medical")
         .cost(1.0)
         .sets("at_medical", true)
         .sets("at_armory", false)
@@ -28,7 +28,7 @@ fn main() {
         .build();
 
     // Action: Move to armory
-    let goto_armory = Action::new("goto_armory")
+    let goto_armory = Action::builder("goto_armory")
         .cost(1.0)
         .sets("at_armory", true)
         .sets("at_medical", false)
@@ -36,7 +36,7 @@ fn main() {
         .build();
 
     // Action: Move to trading post
-    let goto_trading = Action::new("goto_trading")
+    let goto_trading = Action::builder("goto_trading")
         .cost(1.0)
         .sets("at_trading", true)
         .sets("at_medical", false)
@@ -44,28 +44,28 @@ fn main() {
         .build();
 
     // Action: Use health station
-    let heal = Action::new("use_health_station")
+    let heal = Action::builder("use_health_station")
         .cost(2.0)
         .requires("at_medical", true)
-        .requires("has_credits", 20)
+        .requires("has_credits", at_least(20))
         .sets("health", 100)
         .subtracts("has_credits", 20)
         .build();
 
     // Action: Buy armor
-    let buy_armor = Action::new("buy_armor")
+    let buy_armor = Action::builder("buy_armor")
         .cost(2.0)
         .requires("at_armory", true)
-        .requires("has_credits", 30)
+        .requires("has_credits", at_least(30))
         .sets("armor", 50)
         .subtracts("has_credits", 30)
         .build();
 
     // Action: Buy ammo
-    let buy_ammo = Action::new("buy_ammo")
+    let buy_ammo = Action::builder("buy_ammo")
         .cost(1.5)
         .requires("at_trading", true)
-        .requires("has_credits", 25)
+        .requires("has_credits", at_least(25))
         .sets("ammo", 50)
         .subtracts("has_credits", 25)
         .build();
@@ -87,7 +87,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(
         plan_result.is_ok(),
         "Expected to find a valid plan for combat preparation"
@@ -169,7 +169,7 @@ fn main() {
 
     // Verify final state meets all goals
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 

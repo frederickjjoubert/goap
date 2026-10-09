@@ -5,10 +5,10 @@ fn main() {
 
     // Current API - Using builder pattern
     println!("=== Current Builder API ===");
-    let action = Action::new("attack_enemy")
+    let action = Action::builder("attack_enemy")
         .cost(3.0)
         .requires("has_weapon", true)
-        .requires("stamina", 10)
+        .requires("stamina", at_least(10))
         .requires("target_in_range", true)
         .sets("enemy_health", 0)
         .subtracts("stamina", 10)

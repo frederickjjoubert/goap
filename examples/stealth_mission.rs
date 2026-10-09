@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - starting conditions for the stealth mission
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("player_detected", false)
         .set("guard_alert_level", 0)
         .set("security_cameras_active", true)
@@ -18,7 +18,7 @@ fn main() {
         .build();
 
     // Goal state - successfully infiltrate without being detected
-    let goal = Goal::new("stealth_infiltration")
+    let goal = Goal::builder("stealth_infiltration")
         .requires("current_location", "vault")
         .requires("player_detected", false)
         .requires("target_location_accessible", true)
@@ -26,14 +26,14 @@ fn main() {
         .build();
 
     // Action: Observe Guard Patterns
-    let observe_guards = Action::new("observe_guard_patterns")
+    let observe_guards = Action::builder("observe_guard_patterns")
         .cost(2.0)
         .requires("player_detected", false)
         .sets("guard_patrol_memorized", true)
         .build();
 
     // Action: Acquire Disguise
-    let acquire_disguise = Action::new("acquire_disguise")
+    let acquire_disguise = Action::builder("acquire_disguise")
         .cost(3.0)
         .requires("player_detected", false)
         .requires("current_location", "entrance")
@@ -41,13 +41,13 @@ fn main() {
         .build();
 
     // Action: Obtain Hacking Tools
-    let obtain_tools = Action::new("obtain_hacking_tools")
+    let obtain_tools = Action::builder("obtain_hacking_tools")
         .cost(2.0)
         .sets("hacking_tools_available", true)
         .build();
 
     // Action: Hack Security System
-    let hack_security = Action::new("hack_security")
+    let hack_security = Action::builder("hack_security")
         .cost(4.0)
         .requires("hacking_tools_available", true)
         .requires("player_detected", false)
@@ -56,14 +56,14 @@ fn main() {
         .build();
 
     // Action: Create Distraction
-    let create_distraction = Action::new("create_distraction")
+    let create_distraction = Action::builder("create_distraction")
         .cost(1.0)
         .adds("distractions_available", 1)
         .adds("current_noise_level", 2)
         .build();
 
     // Action: Move to Security Room
-    let move_to_security = Action::new("move_to_security_room")
+    let move_to_security = Action::builder("move_to_security_room")
         .cost(2.0)
         .requires("player_detected", false)
         .requires("guard_patrol_memorized", true)
@@ -71,7 +71,7 @@ fn main() {
         .build();
 
     // Action: Move to Vault
-    let move_to_vault = Action::new("move_to_vault")
+    let move_to_vault = Action::builder("move_to_vault")
         .cost(3.0)
         .requires("current_location", "security_room")
         .requires("has_security_keycard", true)
@@ -95,7 +95,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(
         plan_result.is_ok(),
         "Expected to find a valid plan for stealth mission"
@@ -166,7 +166,7 @@ fn main() {
 
     // Verify final state meets all goals
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 

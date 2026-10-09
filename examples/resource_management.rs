@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("wood_logs", 0)
         .set("planks", 0)
         .set("has_saw", false)
@@ -12,42 +12,44 @@ fn main() {
         .build();
 
     // Goal: Have at least 5 planks
-    let goal = Goal::new("craft_planks").requires("planks", 5).build();
+    let goal = Goal::builder("craft_planks")
+        .requires("planks", at_least(5))
+        .build();
 
     // Action: Go to store
-    let goto_store = Action::new("goto_store")
+    let goto_store = Action::builder("goto_store")
         .cost(1.0)
         .sets("at_store", true)
         .sets("at_forest", false)
         .build();
 
     // Action: Buy saw
-    let buy_saw = Action::new("buy_saw")
+    let buy_saw = Action::builder("buy_saw")
         .cost(1.0)
         .requires("at_store", true)
-        .requires("coins", 5)
+        .requires("coins", at_least(5))
         .sets("has_saw", true)
         .subtracts("coins", 5)
         .build();
 
     // Action: Go to forest
-    let goto_forest = Action::new("goto_forest")
+    let goto_forest = Action::builder("goto_forest")
         .cost(1.0)
         .sets("at_forest", true)
         .sets("at_store", false)
         .build();
 
     // Action: Gather wood
-    let gather_wood = Action::new("gather_wood")
+    let gather_wood = Action::builder("gather_wood")
         .cost(2.0)
         .requires("at_forest", true)
         .adds("wood_logs", 3)
         .build();
 
     // Action: Craft planks
-    let craft_planks = Action::new("craft_planks")
+    let craft_planks = Action::builder("craft_planks")
         .cost(2.0)
-        .requires("wood_logs", 3)
+        .requires("wood_logs", at_least(3))
         .requires("has_saw", true)
         .sets("planks", 6)
         .sets("wood_logs", 0)
@@ -60,7 +62,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
 
     // Assert that a plan was found
     assert!(plan_result.is_ok(), "Expected to find a valid plan");

@@ -1,5 +1,6 @@
 use goap::prelude::*;
 use std::fmt;
+use std::str::FromStr;
 
 // Define custom enums
 #[derive(Debug, Clone, PartialEq)]
@@ -21,6 +22,21 @@ impl fmt::Display for Location {
     }
 }
 
+// `FromStr` is the inverse of `Display`; it lets `state.get::<Location>` work.
+impl FromStr for Location {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "town" => Ok(Location::Town),
+            "forest" => Ok(Location::Forest),
+            "cave" => Ok(Location::Cave),
+            "dungeon" => Ok(Location::Dungeon),
+            other => Err(format!("unknown location '{other}'")),
+        }
+    }
+}
+
 // Implement the marker trait to enable enum support
 impl EnumStateVar for Location {}
 
@@ -35,6 +51,18 @@ impl fmt::Display for CharacterClass {
         match self {
             CharacterClass::Warrior => write!(f, "warrior"),
             CharacterClass::Mage => write!(f, "mage"),
+        }
+    }
+}
+
+impl FromStr for CharacterClass {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "warrior" => Ok(CharacterClass::Warrior),
+            "mage" => Ok(CharacterClass::Mage),
+            other => Err(format!("unknown class '{other}'")),
         }
     }
 }
@@ -58,11 +86,24 @@ impl fmt::Display for QuestStatus {
     }
 }
 
+impl FromStr for QuestStatus {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "not_started" => Ok(QuestStatus::NotStarted),
+            "in_progress" => Ok(QuestStatus::InProgress),
+            "completed" => Ok(QuestStatus::Completed),
+            other => Err(format!("unknown quest status '{other}'")),
+        }
+    }
+}
+
 impl EnumStateVar for QuestStatus {}
 
 fn main() {
     // Initial state - character starts in town as a warrior with no quests
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("location", Location::Town)
         .set("character_class", CharacterClass::Warrior)
         .set("level", 1)
@@ -73,102 +114,102 @@ fn main() {
         .build();
 
     // Goal state - complete the dragon quest as a mage in the dungeon
-    let goal = Goal::new("complete_dragon_quest")
+    let goal = Goal::builder("complete_dragon_quest")
         .requires("location", Location::Dungeon)
         .requires("character_class", CharacterClass::Mage)
         .requires("dragon_quest", QuestStatus::Completed)
-        .requires("level", 5)
+        .requires("level", at_least(5))
         .build();
 
     // Action: Travel to different locations
-    let travel_to_forest = Action::new("travel_to_forest")
+    let travel_to_forest = Action::builder("travel_to_forest")
         .cost(2.0)
         .sets("location", Location::Forest)
         .build();
 
-    let travel_to_cave = Action::new("travel_to_cave")
+    let travel_to_cave = Action::builder("travel_to_cave")
         .cost(3.0)
         .sets("location", Location::Cave)
         .build();
 
-    let travel_to_dungeon = Action::new("travel_to_dungeon")
+    let travel_to_dungeon = Action::builder("travel_to_dungeon")
         .cost(4.0)
-        .requires("level", 3)
+        .requires("level", at_least(3))
         .sets("location", Location::Dungeon)
         .build();
 
     // Action: Change character class
-    let become_mage = Action::new("become_mage")
+    let become_mage = Action::builder("become_mage")
         .cost(5.0)
         .requires("character_class", CharacterClass::Warrior)
         .requires("has_magic_scroll", true)
-        .requires("gold", 20)
+        .requires("gold", at_least(20))
         .sets("character_class", CharacterClass::Mage)
         .subtracts("gold", 20)
         .build();
 
     // Action: Acquire items
-    let buy_magic_scroll = Action::new("buy_magic_scroll")
+    let buy_magic_scroll = Action::builder("buy_magic_scroll")
         .cost(1.0)
         .requires("location", Location::Town)
-        .requires("gold", 10)
+        .requires("gold", at_least(10))
         .sets("has_magic_scroll", true)
         .subtracts("gold", 10)
         .build();
 
-    let find_sword = Action::new("find_sword")
+    let find_sword = Action::builder("find_sword")
         .cost(2.0)
         .requires("location", Location::Forest)
         .sets("has_sword", true)
         .build();
 
     // Action: Level up through training
-    let train_level_2 = Action::new("train_to_level_2")
+    let train_level_2 = Action::builder("train_to_level_2")
         .cost(3.0)
         .requires("level", 1)
-        .requires("gold", 10)
+        .requires("gold", at_least(10))
         .sets("level", 2)
         .subtracts("gold", 10)
         .build();
 
-    let train_level_3 = Action::new("train_to_level_3")
+    let train_level_3 = Action::builder("train_to_level_3")
         .cost(4.0)
         .requires("level", 2)
-        .requires("gold", 10)
+        .requires("gold", at_least(10))
         .sets("level", 3)
         .subtracts("gold", 10)
         .build();
 
-    let train_level_4 = Action::new("train_to_level_4")
+    let train_level_4 = Action::builder("train_to_level_4")
         .cost(5.0)
         .requires("level", 3)
-        .requires("gold", 10)
+        .requires("gold", at_least(10))
         .sets("level", 4)
         .subtracts("gold", 10)
         .build();
 
-    let train_level_5 = Action::new("train_to_level_5")
+    let train_level_5 = Action::builder("train_to_level_5")
         .cost(6.0)
         .requires("level", 4)
-        .requires("gold", 10)
+        .requires("gold", at_least(10))
         .sets("level", 5)
         .subtracts("gold", 10)
         .build();
 
     // Action: Start and complete quest
-    let start_dragon_quest = Action::new("start_dragon_quest")
+    let start_dragon_quest = Action::builder("start_dragon_quest")
         .cost(1.0)
         .requires("location", Location::Town)
         .requires("dragon_quest", QuestStatus::NotStarted)
         .sets("dragon_quest", QuestStatus::InProgress)
         .build();
 
-    let complete_dragon_quest = Action::new("complete_dragon_quest")
+    let complete_dragon_quest = Action::builder("complete_dragon_quest")
         .cost(10.0)
         .requires("location", Location::Dungeon)
         .requires("character_class", CharacterClass::Mage)
         .requires("dragon_quest", QuestStatus::InProgress)
-        .requires("level", 5)
+        .requires("level", at_least(5))
         .sets("dragon_quest", QuestStatus::Completed)
         .adds("gold", 200)
         .build();
@@ -193,7 +234,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state.clone(), &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(
         plan_result.is_ok(),
         "Expected to find a valid plan for enum-based RPG quest"
@@ -222,15 +263,15 @@ fn main() {
         let name = &action.name;
         println!("After {name}:");
 
-        // Note: enum values are stored as strings but we defined them with proper enums
-        if let Some(location) = current_state.get::<String>("location") {
-            println!("  Location: {location}");
+        // Enum values are stored as strings and read back as the enum.
+        if let Some(location) = current_state.get::<Location>("location") {
+            println!("  Location: {location} ({location:?})");
         }
-        if let Some(class) = current_state.get::<String>("character_class") {
-            println!("  Class: {class}");
+        if let Some(class) = current_state.get::<CharacterClass>("character_class") {
+            println!("  Class: {class} ({class:?})");
         }
-        if let Some(quest_status) = current_state.get::<String>("dragon_quest") {
-            println!("  Dragon Quest: {quest_status}");
+        if let Some(quest_status) = current_state.get::<QuestStatus>("dragon_quest") {
+            println!("  Dragon Quest: {quest_status} ({quest_status:?})");
         }
         if let Some(level) = current_state.get::<i64>("level") {
             println!("  Level: {level}");
@@ -243,7 +284,7 @@ fn main() {
 
     // Verify final state meets all goals
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 

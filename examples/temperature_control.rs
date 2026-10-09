@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state: Room is 22.5°C, heater and cooler are off
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("temperature", 22.5)
         .set("heater_on", false)
         .set("cooler_on", false)
@@ -10,42 +10,42 @@ fn main() {
         .build();
 
     // Goal: Get room to 24.0°C
-    let goal = Goal::new("Adjust Temperature")
+    let goal = Goal::builder("Adjust Temperature")
         .requires("temperature", 24.0)
         .build();
 
     // Action: Turn on heater
-    let turn_on_heater = Action::new("Turn on heater")
+    let turn_on_heater = Action::builder("Turn on heater")
         .cost(1.0)
         .requires("heater_on", false)
-        .requires("power_available", 20.0) // Need at least 20% power
+        .requires("power_available", at_least(20.0)) // Need at least 20% power
         .sets("heater_on", true)
         .subtracts("power_available", 20.0)
         .build();
 
     // Action: Heat room (can be applied multiple times)
-    let heat_room = Action::new("Heat room")
+    let heat_room = Action::builder("Heat room")
         .cost(2.0)
         .requires("heater_on", true)
-        .requires("power_available", 5.0) // Need at least 5% power to heat
+        .requires("power_available", at_least(5.0)) // Need at least 5% power to heat
         .adds("temperature", 0.5) // Increases temperature by 0.5°C
         .subtracts("power_available", 5.0) // Consumes 5% power per heating cycle
         .build();
 
     // Action: Turn on cooler
-    let turn_on_cooler = Action::new("Turn on cooler")
+    let turn_on_cooler = Action::builder("Turn on cooler")
         .cost(1.0)
         .requires("cooler_on", false)
-        .requires("power_available", 30.0) // Need at least 30% power
+        .requires("power_available", at_least(30.0)) // Need at least 30% power
         .sets("cooler_on", true)
         .subtracts("power_available", 30.0)
         .build();
 
     // Action: Cool room (can be applied multiple times)
-    let cool_room = Action::new("Cool room")
+    let cool_room = Action::builder("Cool room")
         .cost(2.0)
         .requires("cooler_on", true)
-        .requires("power_available", 8.0) // Need at least 8% power to cool
+        .requires("power_available", at_least(8.0)) // Need at least 8% power to cool
         .subtracts("temperature", 1.0) // Decreases temperature by 1.0°C
         .subtracts("power_available", 8.0) // Consumes 8% power per cooling cycle
         .build();
@@ -61,7 +61,7 @@ fn main() {
     println!("Initial state: {initial_state:?}");
     println!("Goal state: {goal:?}");
 
-    match planner.plan(initial_state.clone(), &goal, &actions) {
+    match planner.plan(&initial_state, &goal, &actions) {
         Ok(plan) => {
             let action_count = plan.actions.len();
             let cost = plan.cost;

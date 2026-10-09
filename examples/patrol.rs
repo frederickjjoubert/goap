@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - guard starts at base without radio
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("at_base", true)
         .set("at_point_a", false)
         .set("at_point_b", false)
@@ -14,7 +14,7 @@ fn main() {
         .build();
 
     // Goal state - complete patrol route and return to base
-    let goal = Goal::new("complete_patrol")
+    let goal = Goal::builder("complete_patrol")
         .requires("has_radio", true)
         .requires("reported_at_a", true)
         .requires("reported_at_b", true)
@@ -23,7 +23,7 @@ fn main() {
         .build();
 
     // Action: Equip Radio at Base
-    let equip_radio = Action::new("equip_radio")
+    let equip_radio = Action::builder("equip_radio")
         .cost(1.0)
         .requires("at_base", true)
         .requires("has_radio", false)
@@ -31,7 +31,7 @@ fn main() {
         .build();
 
     // Action: Move to Point A
-    let goto_point_a = Action::new("move_to_point_a")
+    let goto_point_a = Action::builder("move_to_point_a")
         .cost(5.0)
         .sets("at_point_a", true)
         .sets("at_base", false)
@@ -40,7 +40,7 @@ fn main() {
         .build();
 
     // Action: Move to Point B
-    let goto_point_b = Action::new("move_to_point_b")
+    let goto_point_b = Action::builder("move_to_point_b")
         .cost(5.0)
         .sets("at_point_b", true)
         .sets("at_base", false)
@@ -49,7 +49,7 @@ fn main() {
         .build();
 
     // Action: Move to Point C
-    let goto_point_c = Action::new("move_to_point_c")
+    let goto_point_c = Action::builder("move_to_point_c")
         .cost(5.0)
         .sets("at_point_c", true)
         .sets("at_base", false)
@@ -58,7 +58,7 @@ fn main() {
         .build();
 
     // Action: Return to Base
-    let goto_base = Action::new("return_to_base")
+    let goto_base = Action::builder("return_to_base")
         .cost(5.0)
         .sets("at_base", true)
         .sets("at_point_a", false)
@@ -67,7 +67,7 @@ fn main() {
         .build();
 
     // Action: Report at Point A
-    let report_at_a = Action::new("report_at_point_a")
+    let report_at_a = Action::builder("report_at_point_a")
         .cost(2.0)
         .requires("has_radio", true)
         .requires("at_point_a", true)
@@ -75,7 +75,7 @@ fn main() {
         .build();
 
     // Action: Report at Point B
-    let report_at_b = Action::new("report_at_point_b")
+    let report_at_b = Action::builder("report_at_point_b")
         .cost(2.0)
         .requires("has_radio", true)
         .requires("at_point_b", true)
@@ -84,7 +84,7 @@ fn main() {
         .build();
 
     // Action: Report at Point C
-    let report_at_c = Action::new("report_at_point_c")
+    let report_at_c = Action::builder("report_at_point_c")
         .cost(2.0)
         .requires("has_radio", true)
         .requires("at_point_c", true)
@@ -111,7 +111,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(plan_result.is_ok(), "Expected to find a valid patrol plan");
 
     let plan = plan_result.unwrap();
@@ -191,7 +191,7 @@ fn main() {
 
     // Verify final state meets all goals
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 

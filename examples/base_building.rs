@@ -2,7 +2,7 @@ use goap::prelude::*;
 
 fn main() {
     // Initial state - empty plot with basic resources
-    let initial_state = State::new()
+    let initial_state = State::builder()
         .set("metal", 0) // Basic building material
         .set("energy", 0) // Power resource
         .set("components", 0) // Crafted from metal
@@ -17,87 +17,87 @@ fn main() {
         .build();
 
     // Goal state - functional base with power and defenses
-    let goal = Goal::new("build_defensive_base")
-        .requires("energy", 50) // Sustainable power generation
-        .requires("battery_charge", 100) // Energy storage
-        .requires("defense_rating", 75) // Adequate defense
+    let goal = Goal::builder("build_defensive_base")
+        .requires("energy", at_least(50)) // Sustainable power generation
+        .requires("battery_charge", at_least(100)) // Energy storage
+        .requires("defense_rating", at_least(75)) // Adequate defense
         .requires("has_walls", true) // Basic defense
         .requires("has_turrets", true) // Active defense
         .build();
 
     // Action: Build Mining Facility
-    let build_mine = Action::new("build_mine")
+    let build_mine = Action::builder("build_mine")
         .cost(3.0)
         .sets("has_mine", true)
         .adds("metal", 20) // Initial metal bonus
         .build();
 
     // Action: Mine Resources
-    let mine_resources = Action::new("mine_resources")
+    let mine_resources = Action::builder("mine_resources")
         .cost(2.0)
         .requires("has_mine", true)
         .adds("metal", 15)
         .build();
 
     // Action: Build Factory
-    let build_factory = Action::new("build_factory")
+    let build_factory = Action::builder("build_factory")
         .cost(4.0)
-        .requires("metal", 20)
+        .requires("metal", at_least(20))
         .sets("has_factory", true)
         .subtracts("metal", 20)
         .build();
 
     // Action: Craft Components
-    let craft_components = Action::new("craft_components")
+    let craft_components = Action::builder("craft_components")
         .cost(2.0)
         .requires("has_factory", true)
-        .requires("metal", 5)
+        .requires("metal", at_least(5))
         .adds("components", 10)
         .subtracts("metal", 5)
         .build();
 
     // Action: Build Solar Panels
-    let build_solar = Action::new("build_solar_panels")
+    let build_solar = Action::builder("build_solar_panels")
         .cost(3.0)
-        .requires("components", 5)
+        .requires("components", at_least(5))
         .sets("has_solar", true)
         .adds("energy", 30)
         .subtracts("components", 5)
         .build();
 
     // Action: Build Battery
-    let build_battery = Action::new("build_battery")
+    let build_battery = Action::builder("build_battery")
         .cost(3.0)
-        .requires("components", 8)
+        .requires("components", at_least(8))
         .sets("has_battery", true)
         .subtracts("components", 8)
         .build();
 
     // Action: Charge Battery
-    let charge_battery = Action::new("charge_battery")
+    let charge_battery = Action::builder("charge_battery")
         .cost(2.0)
         .requires("has_battery", true)
         .requires("has_solar", true)
-        .requires("energy", 25)
+        .requires("energy", at_least(25))
         .adds("battery_charge", 50)
         .subtracts("energy", 25)
         .build();
 
     // Action: Build Walls
-    let build_walls = Action::new("build_walls")
+    let build_walls = Action::builder("build_walls")
         .cost(4.0)
-        .requires("metal", 15)
+        .requires("metal", at_least(15))
         .sets("has_walls", true)
         .adds("defense_rating", 30)
         .subtracts("metal", 15)
         .build();
 
     // Action: Build Turrets
-    let build_turrets = Action::new("build_turrets")
+    let build_turrets = Action::builder("build_turrets")
         .cost(5.0)
-        .requires("components", 10)
+        .requires("components", at_least(10))
         .requires("has_walls", true)
-        .requires("energy", 20)
+        .requires("energy", at_least(20))
         .sets("has_turrets", true)
         .adds("defense_rating", 45)
         .subtracts("components", 10)
@@ -123,7 +123,7 @@ fn main() {
     let planner = Planner::new();
 
     // Find plan
-    let plan_result = planner.plan(initial_state, &goal, &actions);
+    let plan_result = planner.plan(&initial_state, &goal, &actions);
     assert!(
         plan_result.is_ok(),
         "Expected to find a valid plan for base building"
@@ -213,7 +213,7 @@ fn main() {
 
     // Verify final state meets all goals
     assert!(
-        current_state.satisfies(&goal.desired_state),
+        goal.is_satisfied(&current_state),
         "Final state should meet all goals"
     );
 
