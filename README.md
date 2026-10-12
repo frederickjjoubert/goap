@@ -6,7 +6,7 @@ A general purpose Goal-Oriented Action Planning (GOAP) library written in Rust.
 - Actions are the atomic operations that can be performed in the world, requiring preconditions and having effects.
 - State is a collection of variables that represent the current state of the world.
 
-Simply define goals, actions, and the world state, and the planner will find the cheapest sequence of actions that achieves the goal. The planner is A* with an admissible heuristic derived from your action set (it prices both the effects a goal needs and the chain of preconditions that enables them), so the plan it returns is guaranteed optimal for the actions and costs you gave it.
+Simply define goals, actions, and the world state, and the planner will find the cheapest sequence of actions that achieves the goal. The planner is A* with an admissible heuristic derived from your action set (it prices both the effects a goal needs and the chain of preconditions that enables them), so the plan it returns is guaranteed optimal for the actions and costs you gave it. Inside a `plan` call the state is compiled to a compact indexed form once, so the search never hashes or copies variable names, and the same problem always produces the same plan.
 
 ## Usage
 

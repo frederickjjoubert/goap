@@ -287,8 +287,9 @@ impl<K: Into<String>, V: IntoStateVar> FromIterator<(K, V)> for State {
     }
 }
 
-/// `current ± delta` in raw units, saturating at the `i64` bounds.
-fn shift(current: i64, delta: i64, subtract: bool) -> i64 {
+/// `current ± delta` in raw units, saturating at the `i64` bounds. Shared
+/// with the planner's compiled effects so both apply a delta the same way.
+pub(crate) fn shift(current: i64, delta: i64, subtract: bool) -> i64 {
     if subtract {
         current.saturating_sub(delta)
     } else {

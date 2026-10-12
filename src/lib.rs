@@ -19,7 +19,8 @@
 
 /// Actions module - defines actions that can be performed to change state
 pub mod actions;
-/// Conditions module - comparisons used by goal requirements and action preconditions
+// `conditions` carries its own module documentation (`//!`); an outer doc
+// comment here would make rustdoc resolve its intra-doc links in this scope.
 pub mod conditions;
 /// Goals module - defines goals that agents want to achieve
 pub mod goals;

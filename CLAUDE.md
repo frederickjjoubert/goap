@@ -65,7 +65,7 @@ cargo doc --open
 - **`src/conditions.rs`**: `Condition` / `Conditions` types, the `IntoCondition` trait and the comparison helpers (`at_least`, `between`, ...)
 - **`src/goals.rs`**: Goal definitions with requirements
 - **`src/actions.rs`**: Action definitions with preconditions and effects
-- **`src/planner.rs`**: A* search algorithm with robust error handling
+- **`src/planner.rs`**: validation, relaxed reachability, the compiled problem (`Compiled`, `Value`, `Test`, `Effect`), the heuristic (`GoalAnalysis`) and the A* loop over `SearchGraph`
 
 ### Key Types
 
@@ -140,15 +140,18 @@ let action = Action::builder("mine_gold")
 - `Planner::plan` rejects mismatched deltas (`IncompatibleStateTypes`) and non-numeric deltas (`InvalidEffect`) up front, so inside the search `apply` never hits the "unchanged" case.
 - One effect per key; a second `sets`/`adds`/`subtracts` on the same key replaces the first.
 - The reachability analysis and the heuristic both rely on "missing counts as zero" (`Possible.base` gets the typed zero; `ConditionInfo::lower_bound` prices steps from zero). Keep `State::apply` and those two in agreement.
-- `ConditionInfo::lower_bound` caches a `fixed_bound` when no action steps the variable (the bound then depends only on `Set` effects); keep that shortcut valid if `lower_bound` learns a new state-dependent case.
+- `ConditionInfo::lower_bound` splits into a precomputed `set_bound` (everything a `Set` can do, priced once per `plan` call) and a steps-from-current term evaluated only when the variable has a step rate (`has_rate`). Keep `set_bound` state-independent if `lower_bound` learns a new case.
 
 #### Planner guarantees
 
 - Plans are **cost-optimal**. The heuristic (`GoalAnalysis` in `planner.rs`) is derived from the action set and never overestimates. `tests/planner.rs` cross-checks it against uniform-cost search on 600 random problems; keep that test passing when touching the heuristic.
 - The heuristic (plan 006) works on *facts*: every goal condition and every precondition of a live action. Per state it runs a small Dijkstra computing `h(f) = min over touchers a of H(pre(a)) + max(cost(a), effect_bound(f))` with `H = max` over an action's preconditions (an `h_max`), and combines goal facts by a greedy sum of bounds whose charged action sets (touchers for the effect bound, the transitive closure for `h`) are pairwise disjoint. `estimate` returning `None` means the goal is unreachable from that state and the node is pruned. The admissibility argument is in `docs/plans/006-precondition-aware-heuristic.md` section 2; read it before changing `estimate`.
+- Since plan 008 the Dijkstra runs on `BitSet`s (facts as bits; per action a `precondition_facts` and a `touched_facts` set): an action relaxes when its precondition set is a subset of `done`, relaxation visits `touched & !done`, and the pop is a scan of the `pending` set, so a call allocates nothing and keeps no heap or counters. Facts are classified in `classify_order` (grouped by test kind) and a single unmet goal fact returns its `h` directly; neither changes the value. `Test::evaluate` folds `is_met_by` / `distance` / `direction` into one call and the mirror test checks it against `Condition`. Any change to `estimate` must keep every example's `GOAP_STATS` counts identical unless the plan says why they move (`docs/plans/008-cheaper-heuristic-evaluation.md` section 9 describes the microbenchmark that checks the bound on 20 000 states per problem).
 - Costs have a resolution of 0.001, like `f64` state values. `ActionBuilder::cost` rounds to it; `Planner::plan` converts every cost to integer thousandths once and the search never touches an `f64` (heap ordering, `g`, the heuristic's `StepRate` fractions and `Plan::cost` are all exact). Negative, NaN, infinite or out-of-range action costs are rejected up front (`InvalidActionCost`).
 - `plan` always returns. A relaxed reachability analysis (`Reachability` in `planner.rs`) runs first: goals it proves unreachable return `NoPlanFound` immediately, and actions that can never fire are dropped from the search. Everything else runs under an expansion budget (`Planner::max_expansions`, default `DEFAULT_MAX_EXPANSIONS` = 100 000) and returns `SearchLimitExceeded` when it is spent. `without_expansion_limit()` opts out; only safe when the reachable state space is finite.
-- The reachability analysis is an over-approximation: it must never reject a solvable problem. The 300-problem property test in `tests/planner.rs` guards this too, because its reference search does not use `Planner`.
+- The reachability analysis is an over-approximation: it must never reject a solvable problem. The 600-problem property test in `tests/planner.rs` guards this too, because its reference search does not use `Planner`.
+- The search does not run on `State` (plan 007). After validation and reachability, `plan` builds a `Compiled` problem: variable names mentioned by the goal or a live action become slots, strings become ids, and the state is a flat `[Value]` (`Absent`, `Bool`, `I64`, `F64`, `Str`). `Test` mirrors `Condition` and `Effect` mirrors `StateOperation`, variant for variant, and `Effect::apply` mirrors `State::apply` (sharing `shift`). **Any change to `Condition::is_met_by` / `distance` / `direction` or to `State::apply` must be made in the mirror too**; `test_mirrors_condition_on_every_variant` and `effect_mirrors_state_apply` in `planner.rs` fail if they drift. States live in one arena (`SearchGraph`) with an open-addressing table over them; a generated child is written at the tail and truncated away if it is a duplicate, so the loop allocates nothing per node.
+- Compilation walks every map in variable-name order, so the fact order, the heuristic's tie-breaks and therefore the whole search are deterministic across runs and processes. Keep it that way: never let `HashMap` iteration order reach the search.
 
 ### Error Handling
 
@@ -213,7 +216,8 @@ cargo test state            # State API tests
 ## Bug tracking and plans
 
 - `docs/bugs.md` tracks known bugs with status, reproduction and suggested fix. Update the status table when fixing one.
-- `docs/plans/` holds design/implementation plans for larger changes, with before/after measurements.
+- `docs/plans/` holds design/implementation plans for larger changes, with before/after measurements. The measurements are release builds, best of 5, of each example's first `plan` call with a `GOAP_STATS` line patched into a scratch copy of `planner.rs` (expanded / generated / pushed / reopened / elapsed); a change to the search must keep the counts identical unless the plan says why they move.
+- `docs/improvements.md` lists design suggestions in priority order with a status per item.
 
 ## Development Notes
 
